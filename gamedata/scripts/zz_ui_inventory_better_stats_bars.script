@@ -664,6 +664,8 @@ function ui_inventory.UIInventory:UpdateStats()
 		self.stat_helm["psi"]   = c_helm:GetDefHitTypeProtection( HitTypeID["Telepatic"]    ) or 0
 		self.stat_helm["wound"] = c_helm:GetDefHitTypeProtection( HitTypeID["Wound"]        ) or 0
 
+		self.stat_helm["power"] = (c_helm.m_fPowerRestoreSpeed or 0) * cond
+
 		local bone_value = c_helm:GetBoneArmor( BoneID["bip01_head"] ) or 0
 		self.stat_helm["fire_wound"] = bone_value * cond
 	end
@@ -751,9 +753,9 @@ function ui_inventory.UIInventory:UpdateStats()
 	-- Special case for power (similar to engine method)
 	local power = actor:cast_Actor():conditions():V_SatietyPower() --db.actor.satiety
 	power = power + self.stat_arty["power"]
-	if outfit then
-		power = power + self.stat_outfit["power"]
-		local power_loss = outfit:cast_CustomOutfit().m_fPowerLoss or 0
+	if outfit or helm then
+		power = power + self.stat_outfit["power"] + self.stat_helm["power"]
+		local power_loss = (outfit and outfit:cast_CustomOutfit().m_fPowerLoss or 0) + (helm and helm:cast_Helmet().m_fPowerLoss or 0)
 		if power_loss ~= 0 then
 			power = power / power_loss
 		end
@@ -907,17 +909,24 @@ function ui_inventory.UIInventory:CalculatePowerBoost(p, booster, new_outfit)
 	if not settings.gamma_ui_compatibility then
 		local actor = db.actor
 		local outfit = actor:item_in_slot(7)
+		local helm = actor:item_in_slot(12)
 		local power = actor:cast_Actor():conditions():V_SatietyPower() --db.actor.satiety
 		local old_power = power + self.stat_arty["power"]
 		local new_power = power + self.stat_arty["power"] + p + (booster and booster - power_boost or 0)
-		if outfit then
-			old_power = old_power + self.stat_outfit["power"]
-			new_power = new_power + (new_outfit and new_outfit.power or self.stat_outfit["power"])
-			local power_loss = outfit:cast_CustomOutfit().m_fPowerLoss or 0
+		if outfit or helm then
+			old_power = old_power + self.stat_outfit["power"] + self.stat_helm["power"]
+			if new_outfit then
+				if new_outfit.type == "stat_outfit" then
+					new_power = new_power + new_outfit.power + self.stat_helm["power"]
+				else
+					new_power = new_power + new_outfit.power + self.stat_outfit["power"]
+				end
+			end
+			local power_loss = (outfit and outfit:cast_CustomOutfit().m_fPowerLoss or 0) + (helm and helm:cast_Helmet().m_fPowerLoss or 0)
 			if power_loss ~= 0 then
 				old_power = old_power / power_loss
 				if new_outfit then
-					local new_power_loss = new_outfit.outfit.m_fPowerLoss or 0
+					local new_power_loss = (new_outfit.outfit.m_fPowerLoss or 0) + (new_outfit.type == "stat_helm" and (outfit and outfit:cast_CustomOutfit().m_fPowerLoss or 0) or (new_outfit.outfit.bIsHelmetAvaliable and helm and helm:cast_Helmet().m_fPowerLoss or 0))
 					if new_power_loss ~= 0 then
 						new_power = new_power / new_power_loss
 					end
@@ -1120,7 +1129,7 @@ function ui_inventory.UIInventory:CalculateOutfitBoost(obj, outfit)
 		end
 	end
 
-	self:CalculatePowerBoost(nil, nil, {power = self.bonus_stat["power"].value, outfit = c_obj})
+	self:CalculatePowerBoost(nil, nil, {power = self.bonus_stat["power"].value, outfit = c_obj, type = outfit})
 end
 
 function ui_inventory.UIInventory:ShowBonusStats(obj)
