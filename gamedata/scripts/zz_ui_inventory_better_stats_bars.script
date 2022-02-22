@@ -499,9 +499,7 @@ ui_inventory.UIInventory.__init = function(self)
 		boost_burn_immunity = "burn",
 		boost_telepat_protection = "psi",
 		boost_telepat_immunity = "psi",
-		boost_strike_immunity = "wound",
 		boost_wound_immunity = "wound",
-		boost_explosion_immunity = "fire_wound",
 		boost_fire_wound_immunity = "fire_wound",
 		boost_power_restore = "power"
 	}
@@ -513,38 +511,49 @@ ui_inventory.UIInventory.__init = function(self)
 	self:set_max_values()
 
 	self.bonus_stat = {}
+	self.booster_immunities = {}
 	for name,_ in pairs(self.stat_list) do
 		self.bonus_stat[name]      = {}
 		self.bonus_stat[name].value = 0
 		self.bonus_stat[name].bar  = self.xml:InitProgressBar("equipment:actor_state_info:" .. name .. "_sensor:state_progress", self.stat[name].base)
 		self.bonus_stat[name].bar:SetColor(read_colors("neutral"))
 		self:set_pos_and_size(name)
+
+		self.booster_immunities[name] = 0
 		-- self.bonus_stat[name].bar:SetWndSize(vector2():set(self.stat[name].bar:GetWidth(), self.stat[name].bar:GetHeight()))
 	end
 end
 
-function ui_inventory.UIInventory:GetImmunity(bar, x)
+function ui_inventory.UIInventory:GetActorImmunity(bar)
+	return SYS_GetParam(2, "actor_immunities_" .. get_console():get_string("g_game_difficulty"), self.bar_list[bar], 1)
+end
+
+function ui_inventory.UIInventory:GetImmunity(bar, x, y)
 	local x = x or 0
+	local y = y or 0
+
+	printf("%s: %s, %s", bar, x, y)
 
 	if bar == "psi" then
 		if settings.use_game_values == "none" or psy_bar_patch then
-			return ((self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar] + x) / self.stat_list[bar].max)
+			return (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar] + x) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - y) / self:GetActorImmunity(bar)))
 		else
-			return((self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] * 2 + self.stat_boost[bar] + x) / self.stat_list[bar].max)
+			return (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] * 2 + self.stat_boost[bar] + x) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - y) / self:GetActorImmunity(bar)))
 		end
 	else
-		return (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar] + x) / self.stat_list[bar].max
+		return (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar] + x) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - y) / self:GetActorImmunity(bar)))
 	end
 end
 
 -- ARX formula
-function ui_inventory.UIInventory:GetARXImmunity(bar, x, y)
+function ui_inventory.UIInventory:GetARXImmunity(bar, x, y, z)
 	local x = x or 0
 	local y = y or 0
+	local z = z or 0
 
 	-- Special case for psy damage
 	if bar == "psi" then
-		local psi_val = ((self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar] + x + y) / self.stat_list[bar].max)
+		local psi_val = (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar] + x + y) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - z) / self:GetActorImmunity(bar)))
 		return psi_val
 	else
 		-- printf("initial protection, %s, %s", bar, x)
@@ -552,13 +561,13 @@ function ui_inventory.UIInventory:GetARXImmunity(bar, x, y)
 		if val ~= 0 then
 			if val > 0 then
 				val = 0.998422 - (1.09253 * val ^ 0.735966)
-				val = (self.stat_outfit[bar] + self.stat_helm[bar] + y + self.stat_boost[bar]) / (self.stat_list[bar].max * math.max(0.01, val))
+				val = (self.stat_outfit[bar] + self.stat_helm[bar] + y + self.stat_boost[bar]) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - z) / self:GetActorImmunity(bar)) * math.max(0.01, val))
 			else
 				val = 0.998422 - (1.09253 * (-val) ^ 0.735966)
-				val = (self.stat_outfit[bar] + self.stat_helm[bar] + y + self.stat_boost[bar]) / (self.stat_list[bar].max * (2 - val))
+				val = (self.stat_outfit[bar] + self.stat_helm[bar] + y + self.stat_boost[bar]) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - z) / self:GetActorImmunity(bar)) * (2 - val))
 			end
 		else
-			val = (self.stat_outfit[bar] + self.stat_helm[bar] + y + self.stat_boost[bar]) / (self.stat_list[bar].max)
+			val = (self.stat_outfit[bar] + self.stat_helm[bar] + y + self.stat_boost[bar]) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - z) / self:GetActorImmunity(bar)))
 		end
 		-- printf("result protection, %s, %s", bar, val)
 		return val
@@ -687,17 +696,17 @@ function ui_inventory.UIInventory:UpdateStats()
 -- Boosters
 	for name,val in pairs(self.stat_boost) do
 		self.stat_boost[name] = 0
+		self.booster_immunities[name] = 0
 	end
 	self.stat_boost["health_restore"] = 0
 	self.stat_boost["radia_restore"] = 0
 
 	actor:cast_Actor():conditions():BoosterForEach( function(booster_type, booster_time, booster_value)
 		local boost_id = self.boost_id[booster_type]
-		-- printf("!Booster: %s - %s - %s - %s", self.boost_id_inv[booster_type], booster_type, booster_time, booster_value)
+		printf("!Booster: %s - %s - %s - %s", self.boost_id_inv[booster_type], booster_type, booster_time, booster_value)
 		if boost_id then
 			if boost_id == "wound" or boost_id == "fire_wound" then
-				local actor_immunity = SYS_GetParam(2, "actor_immunities_" .. get_console():get_string("g_game_difficulty"), self.bar_list[boost_id], 1)
-				self.stat_list[boost_id].max = self.stat_list[boost_id].max * ((actor_immunity - booster_value) / actor_immunity)
+				self.booster_immunities[boost_id] = booster_value
 			else
 				self.stat_boost[boost_id] = booster_value
 			end
@@ -713,30 +722,30 @@ function ui_inventory.UIInventory:UpdateStats()
 			self.stat[k].bar:SetProgressPos( clamp( val, 0, 1) )
 		end
 	else
-		local radia_val = ((self.stat_outfit["radia"] + self.stat_helm["radia"] + self.stat_arty["radia"] + self.stat_boost["radia"]) / self.stat_list["radia"].max)
+		local radia_val = ((self.stat_outfit["radia"] + self.stat_helm["radia"] + self.stat_arty["radia"] + self.stat_boost["radia"]) / (self.stat_list["radia"].max * ((self:GetActorImmunity("radia") - self.booster_immunities["radia"]) / self:GetActorImmunity("radia"))))
 		self.stat["radia"].bar:SetProgressPos( clamp( radia_val, 0, 1) )
 		
-		local acid_val = ((self.stat_outfit["acid"] + self.stat_helm["acid"] + self.stat_arty["acid"] + self.stat_boost["acid"]) / self.stat_list["acid"].max)
+		local acid_val = ((self.stat_outfit["acid"] + self.stat_helm["acid"] + self.stat_arty["acid"] + self.stat_boost["acid"]) / (self.stat_list["acid"].max * ((self:GetActorImmunity("acid") - self.booster_immunities["acid"]) / self:GetActorImmunity("acid"))))
 		self.stat["acid"].bar:SetProgressPos( clamp( acid_val, 0, 1) )
 
-		local shock_val = ((self.stat_outfit["shock"] + self.stat_helm["shock"] + self.stat_arty["shock"]) / self.stat_list["shock"].max)
+		local shock_val = ((self.stat_outfit["shock"] + self.stat_helm["shock"] + self.stat_arty["shock"]) / (self.stat_list["shock"].max * ((self:GetActorImmunity("shock") - self.booster_immunities["shock"]) / self:GetActorImmunity("shock"))))
 		self.stat["shock"].bar:SetProgressPos( clamp( shock_val, 0, 1) )
 
-		local fire_val = ((self.stat_outfit["fire"] + self.stat_helm["fire"] + self.stat_arty["fire"]) / self.stat_list["fire"].max)
+		local fire_val = ((self.stat_outfit["fire"] + self.stat_helm["fire"] + self.stat_arty["fire"]) / (self.stat_list["fire"].max * ((self:GetActorImmunity("fire") - self.booster_immunities["fire"]) / self:GetActorImmunity("fire"))))
 		self.stat["fire"].bar:SetProgressPos( clamp( fire_val, 0, 1) )
 
 		-- With non ARX exes, artefacts are having twice the effect on psy damage, first in engine, then in arszi_psy.script
 		-- Reflect that on ui
-		local psi_val = ((self.stat_outfit["psi"] + self.stat_helm["psi"] + self.stat_arty["psi"] * 2 + self.stat_boost["psi"]) / self.stat_list["psi"].max)
+		local psi_val = ((self.stat_outfit["psi"] + self.stat_helm["psi"] + self.stat_arty["psi"] * 2 + self.stat_boost["psi"]) / (self.stat_list["psi"].max * ((self:GetActorImmunity("psi") - self.booster_immunities["psi"]) / self:GetActorImmunity("psi"))))
 		if settings.use_game_values == "none" or psy_bar_patch then
-			psi_val = ((self.stat_outfit["psi"] + self.stat_helm["psi"] + self.stat_arty["psi"] + self.stat_boost["psi"]) / self.stat_list["psi"].max)
+			psi_val = ((self.stat_outfit["psi"] + self.stat_helm["psi"] + self.stat_arty["psi"] + self.stat_boost["psi"]) / (self.stat_list["psi"].max * ((self:GetActorImmunity("psi") - self.booster_immunities["psi"]) / self:GetActorImmunity("psi"))))
 		end
 		self.stat["psi"].bar:SetProgressPos( clamp( psi_val, 0, 1) )
 
-		local wound_val = ((self.stat_outfit["wound"] + self.stat_helm["wound"] + self.stat_arty["wound"]) / self.stat_list["wound"].max)
+		local wound_val = ((self.stat_outfit["wound"] + self.stat_helm["wound"] + self.stat_arty["wound"]) / (self.stat_list["wound"].max * ((self:GetActorImmunity("wound") - self.booster_immunities["wound"]) / self:GetActorImmunity("wound"))))
 		self.stat["wound"].bar:SetProgressPos( clamp( wound_val, 0, 1) )
 
-		local fire_wound_val = ((self.stat_outfit["fire_wound"] + self.stat_helm["fire_wound"] + self.stat_arty["fire_wound"]) / self.stat_list["fire_wound"].max)
+		local fire_wound_val = ((self.stat_outfit["fire_wound"] + self.stat_helm["fire_wound"] + self.stat_arty["fire_wound"]) / (self.stat_list["fire_wound"].max * ((self:GetActorImmunity("fire_wound") - self.booster_immunities["fire_wound"]) / self:GetActorImmunity("fire_wound"))))
 		self.stat["fire_wound"].bar:SetProgressPos( clamp( fire_wound_val, 0, 1) )
 	end
 
@@ -752,7 +761,7 @@ function ui_inventory.UIInventory:UpdateStats()
 	else
 		power = power / 0.5
 	end
-	power = power / self.stat_list["power"].max
+	power = power / (self.stat_list["power"].max * self.booster_immunities["power"])
 	self.stat["power"].bar:SetProgressPos( clamp( power , 0, 15) )
 
 	if settings.gamma_ui_compatibility then
@@ -961,20 +970,22 @@ function ui_inventory.UIInventory:CalculateBoosterBoost(obj)
 	local boost = {}
 	for k, v in pairs(boosters_table[sec]) do
 		local bar = self.boost_list[k]
-		if not boost[bar] then
-			boost[bar] = {
-				protection = 0,
-				immunity = 0,
-				restore = 0,
-			}
-		end
+		if bar then
+			if not boost[bar] then
+				boost[bar] = {
+					protection = 0,
+					immunity = 0,
+					restore = 0,
+				}
+			end
 
-		if sf(k, "protection") then
-			boost[bar].protection = v
-		elseif sf(k, "restore") then
-			boost[bar].restore = v
-		elseif sf(k, "immunity") then
-			boost[bar].immunity = v
+			if sf(k, "protection") then
+				boost[bar].protection = v
+			elseif sf(k, "restore") then
+				boost[bar].restore = v
+			elseif sf(k, "immunity") then
+				boost[bar].immunity = v
+			end
 		end
 	end
 
@@ -997,20 +1008,14 @@ function ui_inventory.UIInventory:CalculateBoosterBoost(obj)
 	for bar, v in pairs(boost) do
 		if settings.arx_compatibility and bar ~= "power" then
 			local initial_stats = self:GetARXImmunity(bar, nil)
-			local new_stats = self:GetARXImmunity(bar, nil, v.protection)
-
-			local actor_immunity = SYS_GetParam(2, "actor_immunities_" .. get_console():get_string("g_game_difficulty"), bar_list[bar], 1)
-			new_stats = new_stats / ((actor_immunity - v.immunity) / actor_immunity)
+			local new_stats = self:GetARXImmunity(bar, nil, v.protection, v.immunity)
 
 			self:SetBonusStatValue(bar, initial_stats, new_stats)
 		else
 			-- With non ARX exes, artefacts are having twice the effect on psy damage, first in engine, then in arszi_psy.script
 			-- Reflect that on ui
 			local initial_stats = self:GetImmunity(bar)
-			local new_stats = self:GetImmunity(bar, v.protection)
-
-			local actor_immunity = SYS_GetParam(2, "actor_immunities_" .. get_console():get_string("g_game_difficulty"), bar_list[bar], 1)
-			new_stats = new_stats / ((actor_immunity - v.immunity) / actor_immunity)
+			local new_stats = self:GetImmunity(bar, v.protection, v.immunity)
 
 			self:SetBonusStatValue(bar, initial_stats, new_stats)
 		end
