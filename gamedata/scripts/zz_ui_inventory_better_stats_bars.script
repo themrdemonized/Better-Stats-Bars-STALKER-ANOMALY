@@ -755,9 +755,11 @@ function ui_inventory.UIInventory:UpdateStats()
 	power = power + self.stat_arty["power"]
 	if outfit or helm then
 		power = power + self.stat_outfit["power"] + self.stat_helm["power"]
-		local power_loss = (outfit and outfit:cast_CustomOutfit().m_fPowerLoss or 0) + (helm and helm:cast_Helmet().m_fPowerLoss or 0)
+		local power_loss = (outfit and outfit:cast_CustomOutfit().m_fPowerLoss or 0)
 		if power_loss ~= 0 then
 			power = power / power_loss
+		else
+			power = power / 0.5
 		end
 	else
 		power = power / 0.5
@@ -922,25 +924,19 @@ function ui_inventory.UIInventory:CalculatePowerBoost(p, booster, new_outfit)
 					new_power = new_power + new_outfit.power + self.stat_outfit["power"]
 				end
 			end
-			local power_loss = (outfit and outfit:cast_CustomOutfit().m_fPowerLoss or 0) + (helm and helm:cast_Helmet().m_fPowerLoss or 0)
-			if power_loss ~= 0 then
-				old_power = old_power / power_loss
-				if new_outfit then
-					local new_power_loss = (new_outfit.outfit.m_fPowerLoss or 0) + (new_outfit.type == "stat_helm" and (outfit and outfit:cast_CustomOutfit().m_fPowerLoss or 0) or (new_outfit.outfit.bIsHelmetAvaliable and helm and helm:cast_Helmet().m_fPowerLoss or 0))
-					if new_power_loss ~= 0 then
-						new_power = new_power / new_power_loss
-					end
-				else
-					new_power = new_power / power_loss
-				end
+			local power_loss = (outfit and outfit:cast_CustomOutfit().m_fPowerLoss or 0)
+			old_power = old_power / (power_loss ~= 0 and power_loss or 0.5)
+			if new_outfit then
+				local new_power_loss = new_outfit.type == "stat_outfit" and new_outfit.outfit.m_fPowerLoss or power_loss
+				new_power = new_power / (new_power_loss ~= 0 and new_power_loss or 0.5)
+			else
+				new_power = new_power / (power_loss ~= 0 and power_loss or 0.5)
 			end
 		else
 			old_power = old_power / 0.5
 			if new_outfit then
 				local new_power_loss = new_outfit.outfit.m_fPowerLoss or 0
-				if new_power_loss ~= 0 then
-					new_power = new_power / new_power_loss
-				end
+				new_power = new_power / (new_power_loss ~= 0 and new_power_loss or 0.5)
 			else
 				new_power = new_power / 0.5
 			end
