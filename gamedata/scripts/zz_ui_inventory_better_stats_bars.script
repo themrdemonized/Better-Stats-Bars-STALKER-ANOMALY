@@ -525,35 +525,34 @@ ui_inventory.UIInventory.__init = function(self)
 end
 
 function ui_inventory.UIInventory:GetActorImmunity(bar)
+	if not self.bar_list[bar] then return 1 end
 	return SYS_GetParam(2, "actor_immunities_" .. get_console():get_string("g_game_difficulty"), self.bar_list[bar], 1)
 end
 
-function ui_inventory.UIInventory:GetImmunity(bar, x, y)
+function ui_inventory.UIInventory:GetImmunity(bar, x, y, outfit, helm)
 	local x = x or 0
-	local y = y or 0
 
-	printf("%s: %s, %s", bar, x, y)
+	-- printf("%s: %s, %s", bar, x, y)
 
 	if bar == "psi" then
 		if settings.use_game_values == "none" or psy_bar_patch then
-			return (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar] + x) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - y) / self:GetActorImmunity(bar)))
+			return ((outfit or self.stat_outfit[bar]) + (helm or self.stat_helm[bar]) + self.stat_arty[bar] + self.stat_boost[bar] + x) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - (y or self.booster_immunities[bar])) / self:GetActorImmunity(bar)))
 		else
-			return (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] * 2 + self.stat_boost[bar] + x) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - y) / self:GetActorImmunity(bar)))
+			return ((outfit or self.stat_outfit[bar]) + (helm or self.stat_helm[bar]) + self.stat_arty[bar] * 2 + self.stat_boost[bar] + x) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - (y or self.booster_immunities[bar])) / self:GetActorImmunity(bar)))
 		end
 	else
-		return (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar] + x) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - y) / self:GetActorImmunity(bar)))
+		return ((outfit or self.stat_outfit[bar]) + (helm or self.stat_helm[bar]) + self.stat_arty[bar] + self.stat_boost[bar] + x) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - (y or self.booster_immunities[bar])) / self:GetActorImmunity(bar)))
 	end
 end
 
 -- ARX formula
-function ui_inventory.UIInventory:GetARXImmunity(bar, x, y, z)
+function ui_inventory.UIInventory:GetARXImmunity(bar, x, y, z, outfit, helm)
 	local x = x or 0
 	local y = y or 0
-	local z = z or 0
 
 	-- Special case for psy damage
 	if bar == "psi" then
-		local psi_val = (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar] + x + y) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - z) / self:GetActorImmunity(bar)))
+		local psi_val = ((outfit or self.stat_outfit[bar]) + (helm or self.stat_helm[bar]) + self.stat_arty[bar] + self.stat_boost[bar] + x + y) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - (z or self.booster_immunities[bar])) / self:GetActorImmunity(bar)))
 		return psi_val
 	else
 		-- printf("initial protection, %s, %s", bar, x)
@@ -561,13 +560,13 @@ function ui_inventory.UIInventory:GetARXImmunity(bar, x, y, z)
 		if val ~= 0 then
 			if val > 0 then
 				val = 0.998422 - (1.09253 * val ^ 0.735966)
-				val = (self.stat_outfit[bar] + self.stat_helm[bar] + y + self.stat_boost[bar]) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - z) / self:GetActorImmunity(bar)) * math.max(0.01, val))
+				val = ((outfit or self.stat_outfit[bar]) + (helm or self.stat_helm[bar]) + y + self.stat_boost[bar]) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - (z or self.booster_immunities[bar])) / self:GetActorImmunity(bar)) * math.max(0.01, val))
 			else
 				val = 0.998422 - (1.09253 * (-val) ^ 0.735966)
-				val = (self.stat_outfit[bar] + self.stat_helm[bar] + y + self.stat_boost[bar]) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - z) / self:GetActorImmunity(bar)) * (2 - val))
+				val = ((outfit or self.stat_outfit[bar]) + (helm or self.stat_helm[bar]) + y + self.stat_boost[bar]) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - (z or self.booster_immunities[bar])) / self:GetActorImmunity(bar)) * (2 - val))
 			end
 		else
-			val = (self.stat_outfit[bar] + self.stat_helm[bar] + y + self.stat_boost[bar]) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - self.booster_immunities[bar] - z) / self:GetActorImmunity(bar)))
+			val = ((outfit or self.stat_outfit[bar]) + (helm or self.stat_helm[bar]) + y + self.stat_boost[bar]) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - (z or self.booster_immunities[bar])) / self:GetActorImmunity(bar)))
 		end
 		-- printf("result protection, %s, %s", bar, val)
 		return val
@@ -703,7 +702,7 @@ function ui_inventory.UIInventory:UpdateStats()
 
 	actor:cast_Actor():conditions():BoosterForEach( function(booster_type, booster_time, booster_value)
 		local boost_id = self.boost_id[booster_type]
-		printf("!Booster: %s - %s - %s - %s", self.boost_id_inv[booster_type], booster_type, booster_time, booster_value)
+		-- printf("!Booster: %s - %s - %s - %s", self.boost_id_inv[booster_type], booster_type, booster_time, booster_value)
 		if boost_id then
 			if boost_id == "wound" or boost_id == "fire_wound" then
 				self.booster_immunities[boost_id] = booster_value
@@ -761,7 +760,7 @@ function ui_inventory.UIInventory:UpdateStats()
 	else
 		power = power / 0.5
 	end
-	power = power / (self.stat_list["power"].max * self.booster_immunities["power"])
+	power = power / self.stat_list["power"].max
 	self.stat["power"].bar:SetProgressPos( clamp( power , 0, 15) )
 
 	if settings.gamma_ui_compatibility then
@@ -897,25 +896,45 @@ function ui_inventory.UIInventory:SetBonusStatValue(bar, old, new, min, max)
 	end
 end
 
-function ui_inventory.UIInventory:CalculatePowerBoost(p)
+function ui_inventory.UIInventory:CalculatePowerBoost(p, booster, new_outfit)
 	-- Special case for power (similar to engine method)
-	if p and not settings.gamma_ui_compatibility then
+	local power_boost = 0
+	db.actor:cast_Actor():conditions():BoosterForEach( function(booster_type, booster_time, booster_value)
+		if self.boost_id[booster_type] and self.boost_id[booster_type] == "power" then power_boost = booster_value end
+	end)
+
+	local p = p or 0
+	if not settings.gamma_ui_compatibility then
 		local actor = db.actor
 		local outfit = actor:item_in_slot(7)
 		local power = actor:cast_Actor():conditions():V_SatietyPower() --db.actor.satiety
 		local old_power = power + self.stat_arty["power"]
-		local new_power = power + self.stat_arty["power"] + p
+		local new_power = power + self.stat_arty["power"] + p + (booster and booster - power_boost or 0)
 		if outfit then
 			old_power = old_power + self.stat_outfit["power"]
-			new_power = new_power + self.stat_outfit["power"]
+			new_power = new_power + (new_outfit and new_outfit.power or self.stat_outfit["power"])
 			local power_loss = outfit:cast_CustomOutfit().m_fPowerLoss or 0
 			if power_loss ~= 0 then
 				old_power = old_power / power_loss
-				new_power = new_power / power_loss
+				if new_outfit then
+					local new_power_loss = new_outfit.outfit.m_fPowerLoss or 0
+					if new_power_loss ~= 0 then
+						new_power = new_power / new_power_loss
+					end
+				else
+					new_power = new_power / power_loss
+				end
 			end
 		else
 			old_power = old_power / 0.5
-			new_power = new_power / 0.5
+			if new_outfit then
+				local new_power_loss = new_outfit.outfit.m_fPowerLoss or 0
+				if new_power_loss ~= 0 then
+					new_power = new_power / new_power_loss
+				end
+			else
+				new_power = new_power / 0.5
+			end
 		end
 		old_power = old_power / self.stat_list["power"].max
 		new_power = new_power / self.stat_list["power"].max
@@ -992,19 +1011,6 @@ function ui_inventory.UIInventory:CalculateBoosterBoost(obj)
 	local bar_list = dup_table(self.bar_list)
 	bar_list.power = "power_restore_speed"
 
-	-- db.actor:cast_Actor():conditions():BoosterForEach( function(booster_type, booster_time, booster_value)
-	-- 	local boost_id = self.boost_id[booster_type]
-	-- 	printf("!Booster: %s - %s - %s - %s", self.boost_id_inv[booster_type], booster_type, booster_time, booster_value)
-	-- 	if boost_id then
-	-- 		if boost_id == "wound" or boost_id == "fire_wound" then
-	-- 			local actor_immunity = SYS_GetParam(2, "actor_immunities_" .. get_console():get_string("g_game_difficulty"), self.bar_list[boost_id], 1)
-	-- 			self.stat_list[boost_id].max = self.stat_list[boost_id].max * ((actor_immunity - booster_value) / actor_immunity)
-	-- 		else
-	-- 			self.stat_boost[boost_id] = booster_value
-	-- 		end
-	-- 	end
-	-- end)
-
 	for bar, v in pairs(boost) do
 		if settings.arx_compatibility and bar ~= "power" then
 			local initial_stats = self:GetARXImmunity(bar, nil)
@@ -1021,7 +1027,100 @@ function ui_inventory.UIInventory:CalculateBoosterBoost(obj)
 		end
 	end
 
-	self:CalculatePowerBoost(boost["power"] and boost["power"].restore)
+	self:CalculatePowerBoost(nil, boost["power"] and boost["power"].restore)
+end
+
+function ui_inventory.UIInventory:CalculateOutfitBoost(obj, outfit)
+	-- Quick check if outfit cant support helmets
+	if outfit == "stat_helm" then
+		local old_outfit = db.actor:item_in_slot(7)
+		if old_outfit then
+			local c_obj = old_outfit:cast_CustomOutfit()
+			if c_obj and not c_obj.bIsHelmetAvaliable then
+				return
+			end
+		end
+	end
+
+	local sf = string.find
+	local sec = obj:section()
+	local cond = obj:condition()
+	local c_obj = outfit == "stat_helm" and obj:cast_Helmet() or obj:cast_CustomOutfit()
+
+	-- By jerkonov info
+	-- Elemental resists are 10 times weaker for outfits and helmets
+	-- The psy damage is hijacked in arszi_psy.script so they dont have an engine factor
+	-- Leave psy damage as is
+	self.bonus_stat["fire"].value  = c_obj:GetDefHitTypeProtection( HitTypeID["Burn"]         ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+	self.bonus_stat["shock"].value = c_obj:GetDefHitTypeProtection( HitTypeID["Shock"]        ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+	self.bonus_stat["acid"].value  = c_obj:GetDefHitTypeProtection( HitTypeID["ChemicalBurn"] ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+	self.bonus_stat["radia"].value = c_obj:GetDefHitTypeProtection( HitTypeID["Radiation"]    ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+	-- self.bonus_stat["psi"].value   = c_obj:GetDefHitTypeProtection( HitTypeID["Telepatic"]    ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+	-- self.bonus_stat["wound"].value = c_obj:GetDefHitTypeProtection( HitTypeID["Wound"]        ) or 0
+
+	-- self.bonus_stat["fire"].value  = c_obj:GetDefHitTypeProtection( HitTypeID["Burn"]         ) or 0
+	-- self.bonus_stat["shock"].value = c_obj:GetDefHitTypeProtection( HitTypeID["Shock"]        ) or 0
+	-- self.bonus_stat["acid"].value  = c_obj:GetDefHitTypeProtection( HitTypeID["ChemicalBurn"] ) or 0
+	-- self.bonus_stat["radia"].value = c_obj:GetDefHitTypeProtection( HitTypeID["Radiation"]    ) or 0
+	self.bonus_stat["psi"].value   = c_obj:GetDefHitTypeProtection( HitTypeID["Telepatic"]    ) or 0
+	self.bonus_stat["wound"].value = c_obj:GetDefHitTypeProtection( HitTypeID["Wound"]        ) or 0
+
+	self.bonus_stat["power"].value = (c_obj.m_fPowerRestoreSpeed or 0) * cond
+
+	if outfit == "stat_helm" then
+		local bone_value = c_obj:GetBoneArmor( BoneID["bip01_head"] ) or 0
+		self.bonus_stat["fire_wound"].value = bone_value * cond
+	else
+		local bone_value = c_obj:GetBoneArmor( BoneID["bip01_spine"] ) or 0
+		if (not c_obj.bIsHelmetAvaliable) then
+			bone_value = bone_value + c_obj:GetBoneArmor( BoneID["bip01_head"] ) or 0
+		end
+		self.bonus_stat["fire_wound"].value = bone_value * cond
+	end
+
+	if (outfit == "stat_outfit" and not c_obj.bIsHelmetAvaliable) then
+		self.bonus_stat["fire"].value = self.bonus_stat["fire"].value - self.stat_helm["fire"]
+		self.bonus_stat["shock"].value = self.bonus_stat["shock"].value - self.stat_helm["shock"]
+		self.bonus_stat["acid"].value = self.bonus_stat["acid"].value - self.stat_helm["acid"]
+		self.bonus_stat["radia"].value = self.bonus_stat["radia"].value - self.stat_helm["radia"]
+		self.bonus_stat["psi"].value = self.bonus_stat["psi"].value - self.stat_helm["psi"]
+		self.bonus_stat["wound"].value = self.bonus_stat["wound"].value - self.stat_helm["wound"]
+		self.bonus_stat["power"].value = self.bonus_stat["power"].value - self.stat_helm["power"]
+		self.bonus_stat["fire_wound"].value = self.bonus_stat["fire_wound"].value - self.stat_helm["fire_wound"]
+	end
+
+	local bar_list = dup_table(self.bar_list)
+	bar_list.power = "power_restore_speed"
+
+	for bar, v in pairs(bar_list) do
+		local initial_stats
+		local new_stats
+		if settings.arx_compatibility and bar ~= "power" then
+			if outfit == "stat_helm" then
+				initial_stats = self:GetARXImmunity(bar, nil)
+				new_stats = self:GetARXImmunity(bar, nil, nil, nil, nil, self.bonus_stat[bar].value)
+			else
+				initial_stats = self:GetARXImmunity(bar, nil)
+				new_stats = self:GetARXImmunity(bar, nil, nil, nil, self.bonus_stat[bar].value)
+			end
+
+			self:SetBonusStatValue(bar, initial_stats, new_stats)
+		else
+			-- With non ARX exes, artefacts are having twice the effect on psy damage, first in engine, then in arszi_psy.script
+			-- Reflect that on ui
+			if outfit == "stat_helm" then
+				initial_stats = self:GetImmunity(bar)
+				new_stats = self:GetImmunity(bar, nil, nil, nil, self.bonus_stat[bar].value)
+			else
+				initial_stats = self:GetImmunity(bar)
+				new_stats = self:GetImmunity(bar, nil, nil, self.bonus_stat[bar].value)
+			end
+
+			self:SetBonusStatValue(bar, initial_stats, new_stats)
+		end
+	end
+
+	self:CalculatePowerBoost(nil, nil, {power = self.bonus_stat["power"].value, outfit = c_obj})
 end
 
 function ui_inventory.UIInventory:ShowBonusStats(obj)
@@ -1036,6 +1135,10 @@ function ui_inventory.UIInventory:ShowBonusStats(obj)
 		self:CalculateArtefactBoost(obj)
 	elseif IsBooster(obj) then
 		self:CalculateBoosterBoost(obj)
+	elseif IsOutfit(obj) then
+		self:CalculateOutfitBoost(obj, "stat_outfit")
+	elseif IsHeadgear(obj) then
+		self:CalculateOutfitBoost(obj, "stat_helm")
 	end
 	
 end
@@ -1063,7 +1166,8 @@ end
 
 function display_artefact_bonuses_after_move()
 	-- Postpone on next tick
-	CreateTimeEvent("display_artefact_bonuses_after_move", "display_artefact_bonuses_after_move", 0, function()
+	-- printf("display_artefact_bonuses_after_move triggered")
+	CreateTimeEvent("display_artefact_bonuses_after_move", "display_artefact_bonuses_after_move", 0.01, function()
 		if ui_inventory.GUI then
 			ui_inventory.GUI:UpdateInfo(true)
 
@@ -1145,6 +1249,8 @@ end
 
 function on_game_start()
 	RegisterScriptCallback("actor_item_to_belt", display_artefact_bonuses_after_move)
+	RegisterScriptCallback("actor_item_to_slot", display_artefact_bonuses_after_move)
+	RegisterScriptCallback("actor_on_item_use", display_artefact_bonuses_after_move)
 	RegisterScriptCallback("ActorMenu_on_item_focus_lost", update_stats)
 	RegisterScriptCallback("ActorMenu_on_item_focus_receive", display_artefact_bonuses)
 	RegisterScriptCallback("GUI_on_hide", update_stats)
