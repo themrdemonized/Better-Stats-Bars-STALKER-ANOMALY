@@ -1,0 +1,45 @@
+op = {
+	id = "better_stats_bars", sh = true, gr = {
+    	{id = "banner", type = "slide", text = "ui_mcm_better_stats_bars_title", size = {512, 50}, spacing = 20},
+        {id = "positive_color_help", type = "desc", clr = {200, 200, 255, 200}, text = "ui_mcm_better_stats_bars_positive_color_help"},
+        {id = "positive_color_a", type = "track", val = 2, min = 0, max = 255, step = 1, def = 255},
+        {id = "positive_color_r", type = "track", val = 2, min = 0, max = 255, step = 1, def = 0},
+        {id = "positive_color_g", type = "track", val = 2, min = 0, max = 255, step = 1, def = 255},
+        {id = "positive_color_b", type = "track", val = 2, min = 0, max = 255, step = 1, def = 0},
+    	{id = "divider", type = "line"},
+        {id = "negative_color_help", type = "desc", clr = {200, 200, 255, 200}, text = "ui_mcm_better_stats_bars_negative_color_help"},
+        {id = "negative_color_a", type = "track", val = 2, min = 0, max = 255, step = 1, def = 255},
+        {id = "negative_color_r", type = "track", val = 2, min = 0, max = 255, step = 1, def = 255},
+        {id = "negative_color_g", type = "track", val = 2, min = 0, max = 255, step = 1, def = 0},
+        {id = "negative_color_b", type = "track", val = 2, min = 0, max = 255, step = 1, def = 0},
+        {id = "divider", type = "line"},
+        {id = "neutral_color_help", type = "desc", clr = {200, 200, 255, 200}, text = "ui_mcm_better_stats_bars_neutral_color_help"},
+        {id = "neutral_color_a", type = "track", val = 2, min = 0, max = 255, step = 1, def = 255},
+        {id = "neutral_color_r", type = "track", val = 2, min = 0, max = 255, step = 1, def = 100},
+        {id = "neutral_color_g", type = "track", val = 2, min = 0, max = 255, step = 1, def = 100},
+        {id = "neutral_color_b", type = "track", val = 2, min = 0, max = 255, step = 1, def = 100},
+        {id = "divider", type = "line"},
+
+        {id = "position", type="list", val=0, def="bottom", content={
+          {"bottom", "better_stats_bars_position_bottom"},
+          {"top", "better_stats_bars_position_top"},
+          {"justify", "better_stats_bars_position_justify"},
+        }},
+        {id = "use_game_values", type="list", val=0, def="max", content={
+          {"none", "better_stats_bars_use_game_values_none"},
+          {"max", "better_stats_bars_use_game_values_max"},
+          -- {"middle", "better_stats_bars_use_game_values_middle"},
+          -- {"median", "better_stats_bars_use_game_values_median"},
+        }},
+        {id = "arx_compatibility", type = "check", val = 1, def = false},
+        {id = "divider", type = "line"},
+
+        {id = "efp_ui_compatibility", type = "check", val = 1, def = false},
+        {id = "gamma_ui_compatibility", type = "check", val = 1, def = false},
+        
+    }
+}
+
+function on_mcm_load()
+    return op
+end

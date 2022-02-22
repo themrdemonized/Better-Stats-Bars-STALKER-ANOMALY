@@ -1,0 +1,1185 @@
+-- UTILS
+boosters_table = {}
+function IsBooster(obj, sec)
+	return boosters_table[obj and obj:section() or sec or ""]
+end
+
+-- Building max damages table
+ignore_sections = { -- Sections to ignore
+	["pri_a17_gauss_rifle"] = true,
+	["m_bibliotekar_e"] = true,
+	["bibliotekar_weak"] = true,
+	["bibliotekar_normal"] = true,
+	["bibliotekar_strong"] = true,
+	["wpn_knife_mp"] = true,
+	["mp_wpn_abakan"] = true,
+	["mp_wpn_ak74"] = true,
+	["mp_wpn_ak74u"] = true,
+	["mp_wpn_beretta"] = true,
+	["mp_wpn_binoc"] = true,
+	["mp_wpn_bm16"] = true,
+	["mp_wpn_colt1911"] = true,
+	["mp_wpn_desert_eagle"] = true,
+	["mp_wpn_fn2000"] = true,
+	["mp_wpn_fort"] = true,
+	["mp_wpn_g36"] = true,
+	["mp_wpn_gauss"] = true,
+	["mp_wpn_groza"] = true,
+	["mp_wpn_hpsa"] = true,
+	["mp_wpn_knife"] = true,
+	["mp_wpn_l85"] = true,
+	["mp_wpn_lr300"] = true,
+	["mp_wpn_mp5"] = true,
+	["mp_wpn_pb"] = true,
+	["mp_wpn_pkm"] = true,
+	["mp_wpn_pm"] = true,
+	["mp_wpn_rg-6"] = true,
+	["mp_wpn_rpg7"] = true,
+	["mp_wpn_sig220"] = true,
+	["mp_wpn_sig550"] = true,
+	["mp_wpn_spas12"] = true,
+	["mp_wpn_svd"] = true,
+	["mp_wpn_svu"] = true,
+	["mp_wpn_toz34"] = true,
+	["mp_wpn_usp"] = true,
+	["mp_wpn_val"] = true,
+	["mp_wpn_vintorez"] = true,
+	["mp_wpn_walther"] = true,
+	["mp_wpn_wincheaster1300"] = true,
+	["mp_wpn_protecta"] = true,
+	["mp_grenade_f1"] = true,
+	["mp_grenade_gd-05"] = true,
+	["mp_grenade_rgd5"] = true,
+	["mp_wpn_addon_grenade_launcher"] = true,
+	["mp_wpn_addon_grenade_launcher_m203"] = true,
+	["mp_wpn_addon_scope"] = true,
+	["mp_wpn_addon_scope_susat"] = true,
+	["mp_wpn_addon_silencer"] = true,
+	["mp_wpn_abakan_scope"] = true,
+	["mp_wpn_lr300_scope"] = true,
+	["mp_wpn_groza_scope"] = true,
+	["mp_wpn_sig550_scope"] = true,
+	["mp_wpn_val_scope"] = true,
+	["mp_zone_witches_galantine"] = true,
+	["wpn_knife"] = true,
+	["wpn_knife1"] = true,
+	["wpn_knife2"] = true,
+	["wpn_knife3"] = true,
+	["wpn_knife4"] = true,
+	["wpn_knife5"] = true,
+	["wpn_knife6"] = true,
+	["wpn_knife7"] = true,
+	["wpn_knife8"] = true,
+	["wpn_knife9"] = true,
+	["wpn_knife10"] = true,
+	["wpn_knife11"] = true,
+	["wpn_knife12"] = true,
+	["wpn_knife13"] = true,
+	["wpn_knife14"] = true,
+	["wpn_knife15"] = true,
+	["wpn_knife16"] = true,
+	["wpn_knife17"] = true,
+	["wpn_knife18"] = true,
+	["wpn_knife19"] = true,
+	["wpn_knife20"] = true,
+	["wpn_knife21"] = true,
+	["wpn_knife22"] = true,
+	["wpn_knife23"] = true,
+	["wpn_knife24"] = true,
+	["wpn_knife25"] = true,
+	["wpn_knife26"] = true,
+	["wpn_knife27"] = true,
+	["wpn_knife28"] = true,
+	["wpn_knife29"] = true,
+	["wpn_knife30"] = true,
+	["wpn_knife31"] = true,
+	["wpn_knife32"] = true,
+	["wpn_knife33"] = true,
+	["wpn_knife34"] = true,
+	["wpn_knife35"] = true,
+	["wpn_knife36"] = true,
+	["wpn_knife37"] = true,
+	["wpn_knife38"] = true,
+	["wpn_knife39"] = true,
+	["wpn_knife40"] = true,
+	["wpn_knife41"] = true,
+	["wpn_knife42"] = true,
+	["wpn_knife43"] = true,
+	["wpn_knife44"] = true,
+	["wpn_knife45"] = true,
+	["wpn_knife46"] = true,
+	["wpn_knife47"] = true,
+	["wpn_knife48"] = true,
+	["wpn_knife49"] = true,
+	["wpn_knife50"] = true,
+	["wpn_knife51"] = true,
+	["wpn_knife52"] = true,
+	["wpn_knife53"] = true,
+	["wpn_knife54"] = true,
+	["wpn_knife55"] = true,
+	["wpn_knife56"] = true,
+	["wpn_knife57"] = true,
+	["wpn_knife58"] = true,
+	["wpn_knife59"] = true,
+	["wpn_knife60"] = true,
+	["wpn_knife61"] = true,
+	["wpn_knife62"] = true,
+	["wpn_knife63"] = true,
+	["wpn_knife64"] = true,
+	["wpn_knife65"] = true,
+	["wpn_knife66"] = true,
+	["wpn_knife67"] = true,
+	["wpn_knife68"] = true,
+	["wpn_knife69"] = true,
+	["wpn_knife70"] = true,
+	["wpn_knife71"] = true,
+	["wpn_knife72"] = true,
+	["wpn_knife73"] = true,
+	["wpn_knife74"] = true,
+	["wpn_knife75"] = true,
+	["wpn_knife76"] = true,
+	["wpn_knife77"] = true,
+	["wpn_knife78"] = true,
+	["wpn_knife79"] = true,
+	["wpn_knife80"] = true,
+	["wpn_knife81"] = true,
+	["wpn_knife82"] = true,
+	["wpn_knife83"] = true,
+	["wpn_knife84"] = true,
+	["wpn_knife85"] = true,
+	["wpn_knife86"] = true,
+	["wpn_knife87"] = true,
+	["wpn_knife88"] = true,
+	["wpn_knife89"] = true,
+	["wpn_knife90"] = true,
+	["wpn_knife91"] = true,
+	["wpn_knife92"] = true,
+	["wpn_knife93"] = true,
+	["wpn_knife94"] = true,
+	["wpn_knife95"] = true,
+	["wpn_knife96"] = true,
+	["wpn_knife97"] = true,
+	["wpn_knife98"] = true,
+	["wpn_knife99"] = true,
+	["zone_witches_galantine"] = true,
+	["zone_witches_galantine_weak"] = true,
+	["zone_witches_galantine_average"] = true,
+	["zone_witches_galantine_strong"] = true,
+	["zone_burning_fuzz"] = true,
+	["zone_burning_fuzz1"] = true,
+	["zone_burning_fuzz_weak"] = true,
+	["zone_burning_fuzz_average"] = true,
+	["zone_burning_fuzz_strong"] = true,
+	["zone_buzz"] = true,
+	["zone_buzz_weak"] = true,
+	["zone_buzz_average"] = true,
+	["zone_buzz_strong"] = true,
+	["zone_zharka_static"] = true,
+	["zone_zharka_static_weak"] = true,
+	["zone_zharka_static_average"] = true,
+	["zone_zharka_static_strong"] = true,
+	["zone_gravi_zone"] = true,
+	["zone_hvatalka"] = true,
+	["zone_liana"] = true,
+	["zone_mine_acidic"] = true,
+	["zone_mine_electric"] = true,
+	["zone_mine_thermal"] = true,
+	["zone_student"] = true,
+	["zone_monolith"] = true,
+	["zone_no_gravity"] = true,
+	["zone_sarcofag"] = true,
+	["zone_mine_acidic_big"] = true,
+	["generator_torrid"] = true,
+	["generator_dust"] = true,
+	["generator_electra"] = true,
+	["generator_dust_static"] = true,
+	["campfire_base"] = true,
+	["campfire_base_noshadow"] = true,
+	["campfire"] = true,
+	["zone_radioactive"] = true,
+	-- ["zone_radioactive_weak"] = true,
+	-- ["zone_radioactive_average"] = true,
+	-- ["zone_radioactive_strong"] = true,
+	["zone_teleport"] = true,
+	["fireball_zone"] = true,
+	["fireball_electric_zone"] = true,
+	["fireball_acidic_zone"] = true,
+}
+
+-- Stat to damage for UI
+stat_to_dmg = {
+	burn = "fire",
+	light_burn = "fire",
+	fire = "fire",
+	shock = "shock",
+	chemical_burn = "acid",
+	acid = "acid",
+	radiation = "radia",
+	radia = "radia",
+	telepatic = "psi",
+	psi = "psi",
+	strike = "wound",
+	explosion = "explosion",
+	wound = "wound",
+	fire_wound = "fire_wound",
+	[hit.light_burn]    = "fire",
+	[hit.burn]          = "fire",
+	[hit.strike]        = "wound",
+	[hit.shock]         = "shock",
+	[hit.wound]         = "wound",
+	[hit.radiation]     = "radia",
+	[hit.telepatic]     = "psi",
+	[hit.chemical_burn] = "acid",
+	[hit.fire_wound]    = "fire_wound",
+}
+
+-- Above this threshold the damage is fatal no matter what or nonsense, no need to count it
+damage_threshold = {
+	["fire"] = 1,
+	["shock"] = 1,
+	["radia"] = 0.1,
+	["psi"] = 1,
+	["acid"] = 1,
+	["wound"] = 1.96,
+	["fire_wound"] = 1.37,
+	["explosion"] = 3.1,
+	["strike"] = 2,
+}
+
+-- Get max damages
+damages = {}
+max_damage = {}
+function build_tables()
+	local t = {}
+	local function add_damage(dmg, k)
+		if not t[k] then 
+			t[k] = 0
+			damages[k] = {}
+		end
+
+		dmg = tonumber(dmg)
+		if dmg > 0 and dmg <= damage_threshold[k] then
+			-- if k == "radia" then
+			-- 	printf("sec %s, power %s, hit_type %s", sec, dmg, k)
+			-- end
+			table.insert(damages[k], dmg)
+			if dmg > t[k] then t[k] = dmg end
+		end
+	end
+
+	local boost_table = {
+		"boost_radiation_protection",
+		"boost_telepat_protection",
+		"boost_chemburn_protection",
+		"boost_burn_immunity",
+		"boost_shock_immunity",
+		"boost_radiation_immunity",
+		"boost_telepat_immunity",
+		"boost_chemburn_immunity",
+		"boost_strike_immunity",
+		"boost_wound_immunity",
+		"boost_explosion_immunity",
+		"boost_fire_wound_immunity",
+		"boost_power_restore",
+	}
+
+	ini_sys:section_for_each(function(sec)
+		if not ignore_sections[sec] then
+			if SYS_GetParam(2, sec, "boost_time") then -- Is Booster
+				boosters_table[sec] = (function() 
+					local t = {}
+					for i = 1, #boost_table do
+						if SYS_GetParam(2, sec, boost_table[i], 0) > 0 then
+							t[boost_table[i]] = SYS_GetParam(2, sec, boost_table[i], 0)
+						end
+					end
+					return t
+				end)()
+			end 
+			local hit_type = SYS_GetParam(0, sec, "hit_type") or SYS_GetParam(0, sec, "hit_type_blast")
+			if hit_type and stat_to_dmg[hit_type] then
+				local k = stat_to_dmg[hit_type]
+				if not t[k] then 
+					t[k] = 0
+					damages[k] = {}
+				end
+
+				local dmg = 0
+				if k == "fire_wound" then
+					local d = tonumber(str_explode(SYS_GetParam(0, sec, "hit_power", "0"), ",")[1]) or 0
+					local scale = (function()
+						local s = SYS_GetParam(0, sec, "ammo_class")
+						if not s then return 1 end
+
+						local max = 0
+						for _, v in ipairs(str_explode(s, ",")) do
+							local ka = SYS_GetParam(2, v, "k_hit", 1)
+							if ka > max and ka <= damage_threshold[k] then max = ka end
+						end
+						return max
+					end)() or 0
+					-- printf("section %s, power %s, k %s, res %s, hit_type %s", sec, d, scale, d * scale, k)
+					dmg = d * scale
+				elseif k == "explosion" then
+					dmg = SYS_GetParam(2, sec, "hit_power") or SYS_GetParam(2, sec, "hit_power_blast") or 0
+				elseif SYS_GetParam(0, sec, "attack_params") then
+					local t = utils_data.collect_section(ini_sys, SYS_GetParam(0, sec, "attack_params"), true)
+					local max = 0
+					for _, v in pairs(t) do
+						local s = str_explode(v, ",")
+						local d = #s == 11 and s[2] and tonumber(s[2]) or 0
+						if d > max and d <= damage_threshold[k] then max = d end
+					end
+					dmg = max
+				else
+					local d = SYS_GetParam(2, sec, "max_start_power") or 0
+					if d > 0 then
+						-- local scale = SYS_GetParam(0, sec, "hit_impulse_scale")
+						-- if scale then
+						-- 	if scale[1] == "." then scale = "0" .. scale end
+						-- 	scale = tonumber(scale)
+						-- 	if scale == 0.0 then
+						-- 		scale = 1
+						-- 	end
+						-- else
+						-- 	scale = 1
+						-- end
+						local scale = SYS_GetParam(0, sec, "class", "") == "ZS_RADIO" and 0.1 or 1
+						dmg = d * scale
+						-- printf("zone section %s, power %s, scale %s hit type %s", sec, dmg, scale, k)
+					end
+				end
+				add_damage(dmg, k)
+
+				if hit_type == "strike" then
+					add_damage(dmg, "strike")
+				elseif hit_type == "explosion" then
+					add_damage(dmg, "explosion")
+				end
+
+				-- Controller tube damage extra case
+				local tube_damage = SYS_GetParam(2, sec, "tube_damage")
+				if tube_damage and tube_damage > 0 then
+					add_damage(math.min(tube_damage, 1), "psi")
+				end
+			end
+		end
+	end)
+	max_damage = t
+end
+
+build_tables()
+for k, v in pairs(damages) do
+	table.sort(damages[k])
+end
+
+local function get_middle(t)
+	local s = 0
+	for i = 1, #t do
+		s = s + t[i]
+	end
+	return s / #t
+end
+
+local function get_median(t)
+	return odd(#t) and t[(#t + 1) / 2] or (t[#t / 2] + t[#t / 2 + 1]) / 2
+end
+
+-- Load the defaults
+local function load_defaults()
+	local t = {}
+	local op = better_stats_bars_mcm.op
+	for i, v in ipairs(op.gr) do
+		if v.def ~= nil then
+			t[v.id] = v.def
+		end
+	end
+	-- t.arx_compatibility = false
+	return t
+end
+local settings = load_defaults()
+local function load_settings()
+	settings = load_defaults()
+	if ui_mcm then
+		for k, v in pairs(settings) do
+			settings[k] = ui_mcm.get("better_stats_bars/" .. k)
+		end
+	end
+end
+
+local function read_colors(color)
+	return GetARGB(
+		settings[color .. "_color_a"],
+		settings[color .. "_color_r"],
+		settings[color .. "_color_g"],
+		settings[color .. "_color_b"]
+	)
+end
+
+function ui_inventory.UIInventory:set_max_values(reset)
+	for bar, v in pairs(self.bar_list) do
+		if reset then
+			self.stat_list[bar].max = self.og_max_stat_list[bar]
+		elseif settings.use_game_values == "max" then
+			self.stat_list[bar].max = max_damage[bar]
+		elseif settings.use_game_values == "middle" then
+			self.stat_list[bar].max = get_middle(damages[bar])
+		elseif settings.use_game_values == "median" then
+			self.stat_list[bar].max = get_median(damages[bar])
+		else
+			self.stat_list[bar].max = self.og_max_stat_list[bar]
+		end
+	end
+end
+
+function ui_inventory.UIInventory:set_pos_and_size(name)
+	local size
+	local pos = self.stat[name].bar:GetWndPos()
+	local bar_pos = settings.position
+	if settings.efp_ui_compatibility then
+		local scale = 1.15
+		if bar_pos == "bottom" then
+			pos = vector2():set(pos.x, pos.y + (self.stat[name].bar:GetHeight() - self.stat[name].bar:GetHeight() / scale))
+			size = vector2():set(self.stat[name].bar:GetWidth(), self.stat[name].bar:GetHeight() / scale)
+		elseif bar_pos == "top" then
+			pos = vector2():set(pos.x, pos.y)
+			size = vector2():set(self.stat[name].bar:GetWidth(), self.stat[name].bar:GetHeight() / scale)
+		else
+			pos = vector2():set(pos.x, pos.y)
+			size = vector2():set(self.stat[name].bar:GetWidth(), self.stat[name].bar:GetHeight())
+		end
+		-- pos = vector2():set(pos.x, pos.y)
+		-- size = vector2():set(self.stat[name].bar:GetWidth(), self.stat[name].bar:GetHeight())
+	else
+		if bar_pos == "bottom" then
+			pos = vector2():set(pos.x, pos.y + self.stat[name].bar:GetHeight() / 2)
+			size = vector2():set(self.stat[name].bar:GetWidth(), self.stat[name].bar:GetHeight() / 2)
+		elseif bar_pos == "top" then
+			pos = vector2():set(pos.x, pos.y)
+			size = vector2():set(self.stat[name].bar:GetWidth(), self.stat[name].bar:GetHeight() / 2)
+		else
+			pos = vector2():set(pos.x, pos.y)
+			size = vector2():set(self.stat[name].bar:GetWidth(), self.stat[name].bar:GetHeight())
+		end
+	end
+	self.bonus_stat[name].bar:SetWndSize(size)
+	self.bonus_stat[name].bar:SetWndPos(pos)
+end
+
+function ui_inventory.UIInventory:set_pos_and_size_all()
+	for name,_ in pairs(self.stat_list) do
+		self:set_pos_and_size(name)					
+	end
+end
+
+ui_inventory_init = ui_inventory.UIInventory.__init
+ui_inventory.UIInventory.__init = function(self)
+	ui_inventory_init(self)
+
+	self.boost_id[ BoosterID["WoundImmunity"] ]           = "wound"
+	self.boost_id[ BoosterID["FireWoundImmunity"] ]       = "fire_wound"
+
+	self.bar_list = {
+		radia = "radiation_immunity",
+		acid = "chemical_burn_immunity",
+		shock = "shock_immunity",
+		fire = "burn_immunity",
+		psi = "telepatic_immunity",
+		wound = "wound_immunity",
+		fire_wound = "fire_wound_immunity",
+	}
+
+	self.boost_list = {
+		boost_radiation_protection = "radia",
+		boost_radiation_immunity = "radia",
+		boost_chemburn_protection = "acid",
+		boost_chemburn_immunity = "acid",
+		boost_shock_immunity = "shock",
+		boost_burn_immunity = "burn",
+		boost_telepat_protection = "psi",
+		boost_telepat_immunity = "psi",
+		boost_strike_immunity = "wound",
+		boost_wound_immunity = "wound",
+		boost_explosion_immunity = "fire_wound",
+		boost_fire_wound_immunity = "fire_wound",
+		boost_power_restore = "power"
+	}
+
+	self.og_max_stat_list = {}
+	for bar, v in pairs(self.bar_list) do
+		self.og_max_stat_list[bar] = self.stat_list[bar].max
+	end
+	self:set_max_values()
+
+	self.bonus_stat = {}
+	for name,_ in pairs(self.stat_list) do
+		self.bonus_stat[name]      = {}
+		self.bonus_stat[name].value = 0
+		self.bonus_stat[name].bar  = self.xml:InitProgressBar("equipment:actor_state_info:" .. name .. "_sensor:state_progress", self.stat[name].base)
+		self.bonus_stat[name].bar:SetColor(read_colors("neutral"))
+		self:set_pos_and_size(name)
+		-- self.bonus_stat[name].bar:SetWndSize(vector2():set(self.stat[name].bar:GetWidth(), self.stat[name].bar:GetHeight()))
+	end
+end
+
+-- ARX formula
+function ui_inventory.UIInventory:GetARXImmunity(bar, x, y)
+	-- Special case for psy damage
+	if bar == "psi" then
+		local psi_val = ((self.stat_outfit[bar] + self.stat_helm[bar] + (x or 0) + (y or 0) + self.stat_boost[bar]) / self.stat_list[bar].max)
+		return psi_val
+	else
+		-- printf("initial protection, %s, %s", bar, x)
+		local val = clamp(x, -0.99, 0.99)
+		if val ~= 0 then
+			if val > 0 then
+				val = 0.998422 - (1.09253 * val ^ 0.735966)
+				val = (self.stat_outfit[bar] + self.stat_helm[bar] + (y or 0) + self.stat_boost[bar]) / (self.stat_list[bar].max * math.max(0.01, val))
+			else
+				val = 0.998422 - (1.09253 * (-val) ^ 0.735966)
+				val = (self.stat_outfit[bar] + self.stat_helm[bar] + (y or 0) + self.stat_boost[bar]) / (self.stat_list[bar].max * (2 - val))
+			end
+		else
+			val = (self.stat_outfit[bar] + self.stat_helm[bar] + (y or 0) + self.stat_boost[bar]) / (self.stat_list[bar].max)
+		end
+		-- printf("result protection, %s, %s", bar, val)
+		return val
+	end
+end
+
+function ui_inventory.UIInventory:GetProtection(bar)
+	if settings.arx_compatibility then
+		return self:GetARXImmunity(bar, self.stat_arty[bar])
+	else
+		if bar == "psi" then
+			if settings.use_game_values == "none" or psy_bar_patch then
+				return ((self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar]) / self.stat_list[bar].max)
+			else
+				return((self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] * 2 + self.stat_boost[bar]) / self.stat_list[bar].max)
+			end
+		else
+			return (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar]) / self.stat_list[bar].max
+		end
+	end
+end
+
+function ui_inventory.UIInventory:UpdateStats()
+	--self:Print(nil, "UpdateStats")
+	local actor = db.actor
+
+	-- Reset max values
+	self:set_max_values()
+	
+-- Outfit
+	for name,val in pairs(self.stat_outfit) do
+		self.stat_outfit[name] = 0
+	end
+	self.stat_outfit["health_restore"]  = 0
+	self.stat_outfit["radia_restore"]  = 0
+
+	local outfit = actor:item_in_slot(7)
+	if outfit then
+		local c_outfit = outfit:cast_CustomOutfit()
+		if (not c_outfit) then
+			printe("UIInventory | can't get cast_CustomOutfit of [%s]", outfit:name())
+		end
+		local sec = outfit:section()
+		local id = outfit:id()
+		local cond = outfit:condition()
+		
+		self.stat_outfit["health_restore"]  = c_outfit.m_fHealthRestoreSpeed
+		self.stat_outfit["radia_restore"]  = c_outfit.m_fRadiationRestoreSpeed
+		
+		-- By jerkonov info
+		-- Elemental resists are 10 times weaker for outfits and helmets
+		-- The psy damage is hijacked in arszi_psy.script so they dont have an engine factor
+		-- Leave psy damage as is
+		self.stat_outfit["fire"]  = c_outfit:GetDefHitTypeProtection( HitTypeID["Burn"]         ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+		self.stat_outfit["shock"] = c_outfit:GetDefHitTypeProtection( HitTypeID["Shock"]        ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+		self.stat_outfit["acid"]  = c_outfit:GetDefHitTypeProtection( HitTypeID["ChemicalBurn"] ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+		self.stat_outfit["radia"] = c_outfit:GetDefHitTypeProtection( HitTypeID["Radiation"]    ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+		-- self.stat_outfit["psi"]   = c_outfit:GetDefHitTypeProtection( HitTypeID["Telepatic"]    ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+		-- self.stat_outfit["wound"] = c_outfit:GetDefHitTypeProtection( HitTypeID["Wound"]        ) or 0
+
+		-- self.stat_outfit["fire"]  = c_outfit:GetDefHitTypeProtection( HitTypeID["Burn"]         ) or 0
+		-- self.stat_outfit["shock"] = c_outfit:GetDefHitTypeProtection( HitTypeID["Shock"]        ) or 0
+		-- self.stat_outfit["acid"]  = c_outfit:GetDefHitTypeProtection( HitTypeID["ChemicalBurn"] ) or 0
+		-- self.stat_outfit["radia"] = c_outfit:GetDefHitTypeProtection( HitTypeID["Radiation"]    ) or 0
+		self.stat_outfit["psi"]   = c_outfit:GetDefHitTypeProtection( HitTypeID["Telepatic"]    ) or 0
+		self.stat_outfit["wound"] = c_outfit:GetDefHitTypeProtection( HitTypeID["Wound"]        ) or 0
+
+		self.stat_outfit["power"] = (c_outfit.m_fPowerRestoreSpeed or 0) * cond
+
+		local bone_value = c_outfit:GetBoneArmor( BoneID["bip01_spine"] ) or 0
+		if (not c_outfit.bIsHelmetAvaliable) then
+			bone_value = bone_value + c_outfit:GetBoneArmor( BoneID["bip01_head"] ) or 0
+		end
+		self.stat_outfit["fire_wound"] = bone_value * cond
+	end
+	
+-- Helmet
+	for name,val in pairs(self.stat_helm) do
+		self.stat_helm[name] = 0
+	end
+	
+	local helm = actor:item_in_slot(12)
+	if helm then
+		local c_helm = helm:cast_Helmet()
+		if (not c_helm) then
+			printe("UIInventory | can't get cast_Helmet of [%s]", outfit:name())
+		end
+		local sec = helm:section()
+		local id = helm:id()
+		local cond = helm:condition()
+		
+		-- By jerkonov info
+		-- Elemental resists are 10 times weaker for outfits and helmets
+		-- The psy damage is hijacked in arszi_psy.script so they dont have an engine factor
+		-- Leave psy damage as is
+		self.stat_helm["fire"]  = c_helm:GetDefHitTypeProtection( HitTypeID["Burn"]         ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+		self.stat_helm["shock"] = c_helm:GetDefHitTypeProtection( HitTypeID["Shock"]        ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+		self.stat_helm["acid"]  = c_helm:GetDefHitTypeProtection( HitTypeID["ChemicalBurn"] ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+		self.stat_helm["radia"] = c_helm:GetDefHitTypeProtection( HitTypeID["Radiation"]    ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+		-- self.stat_helm["psi"]   = c_helm:GetDefHitTypeProtection( HitTypeID["Telepatic"]    ) * (settings.use_game_values ~= "none" and 0.1 or 1) or 0
+		-- self.stat_helm["wound"] = c_helm:GetDefHitTypeProtection( HitTypeID["Wound"]        ) or 0
+
+		-- self.stat_helm["fire"]  = c_helm:GetDefHitTypeProtection( HitTypeID["Burn"]         ) or 0
+		-- self.stat_helm["shock"] = c_helm:GetDefHitTypeProtection( HitTypeID["Shock"]        ) or 0
+		-- self.stat_helm["acid"]  = c_helm:GetDefHitTypeProtection( HitTypeID["ChemicalBurn"] ) or 0
+		-- self.stat_helm["radia"] = c_helm:GetDefHitTypeProtection( HitTypeID["Radiation"]    ) or 0
+		self.stat_helm["psi"]   = c_helm:GetDefHitTypeProtection( HitTypeID["Telepatic"]    ) or 0
+		self.stat_helm["wound"] = c_helm:GetDefHitTypeProtection( HitTypeID["Wound"]        ) or 0
+
+		local bone_value = c_helm:GetBoneArmor( BoneID["bip01_head"] ) or 0
+		self.stat_helm["fire_wound"] = bone_value * cond
+	end
+	
+-- Artefacts
+	for name,val in pairs(self.stat_arty) do
+		self.stat_arty[name] = 0
+	end
+	self.stat_arty["health_restore"] = 0
+	self.stat_arty["radia_restore"] = 0
+	
+	actor:iterate_belt( function(owner, obj)
+		local sec = obj:section()
+		local cond = obj:condition()
+		local immunities_sec = SYS_GetParam(0,obj:section(),"hit_absorbation_sect")
+		self.stat_arty["health_restore"] = self.stat_arty["health_restore"] + ( cond * SYS_GetParam(2, sec, "health_restore_speed", 0) )
+		self.stat_arty["radia_restore"]  = self.stat_arty["radia_restore"]  + ( cond * SYS_GetParam(2, sec, "radiation_restore_speed", 0) )
+		
+		self.stat_arty["power"]      = self.stat_arty["power"]      + ( cond * SYS_GetParam(2, sec, "power_restore_speed", 0) )
+		self.stat_arty["radia"]      = self.stat_arty["radia"]      + ( cond * SYS_GetParam(2, immunities_sec, "radiation_immunity", 0) )
+		self.stat_arty["acid"]       = self.stat_arty["acid"]       + ( cond * SYS_GetParam(2, immunities_sec, "chemical_burn_immunity", 0) )
+		self.stat_arty["shock"]      = self.stat_arty["shock"]      + ( cond * SYS_GetParam(2, immunities_sec, "shock_immunity", 0) )
+		self.stat_arty["fire"]       = self.stat_arty["fire"]       + ( cond * SYS_GetParam(2, immunities_sec, "burn_immunity", 0) )
+		self.stat_arty["psi"]        = self.stat_arty["psi"]        + ( cond * SYS_GetParam(2, immunities_sec, "telepatic_immunity", 0) )
+		self.stat_arty["wound"]      = self.stat_arty["wound"]      + ( cond * SYS_GetParam(2, immunities_sec, "wound_immunity", 0) )
+		self.stat_arty["fire_wound"] = self.stat_arty["fire_wound"] + ( cond * SYS_GetParam(2, immunities_sec, "fire_wound_immunity", 0) )
+	end)
+	
+-- Boosters
+	for name,val in pairs(self.stat_boost) do
+		self.stat_boost[name] = 0
+	end
+	self.stat_boost["health_restore"] = 0
+	self.stat_boost["radia_restore"] = 0
+
+	actor:cast_Actor():conditions():BoosterForEach( function(booster_type, booster_time, booster_value)
+		local boost_id = self.boost_id[booster_type]
+		-- printf("!Booster: %s - %s - %s - %s", self.boost_id_inv[booster_type], booster_type, booster_time, booster_value)
+		if boost_id then
+			if boost_id == "wound" or boost_id == "fire_wound" then
+				local actor_immunity = SYS_GetParam(2, "actor_immunities_" .. get_console():get_string("g_game_difficulty"), self.bar_list[boost_id], 1)
+				self.stat_list[boost_id].max = self.stat_list[boost_id].max * ((actor_immunity - booster_value) / actor_immunity)
+			else
+				self.stat_boost[boost_id] = booster_value
+			end
+		end
+	end)
+	
+-- Progress bars
+	self.stat["health"].bar:SetProgressPos( clamp( actor.health, 0, 1) )
+
+	if settings.arx_compatibility then
+		for k, v in pairs(self.bar_list) do
+			local val = self:GetARXImmunity(k, self.stat_arty[k])
+			self.stat[k].bar:SetProgressPos( clamp( val, 0, 1) )
+		end
+	else
+		local radia_val = ((self.stat_outfit["radia"] + self.stat_helm["radia"] + self.stat_arty["radia"] + self.stat_boost["radia"]) / self.stat_list["radia"].max)
+		self.stat["radia"].bar:SetProgressPos( clamp( radia_val, 0, 1) )
+		
+		local acid_val = ((self.stat_outfit["acid"] + self.stat_helm["acid"] + self.stat_arty["acid"] + self.stat_boost["acid"]) / self.stat_list["acid"].max)
+		self.stat["acid"].bar:SetProgressPos( clamp( acid_val, 0, 1) )
+
+		local shock_val = ((self.stat_outfit["shock"] + self.stat_helm["shock"] + self.stat_arty["shock"]) / self.stat_list["shock"].max)
+		self.stat["shock"].bar:SetProgressPos( clamp( shock_val, 0, 1) )
+
+		local fire_val = ((self.stat_outfit["fire"] + self.stat_helm["fire"] + self.stat_arty["fire"]) / self.stat_list["fire"].max)
+		self.stat["fire"].bar:SetProgressPos( clamp( fire_val, 0, 1) )
+
+		-- With non ARX exes, artefacts are having twice the effect on psy damage, first in engine, then in arszi_psy.script
+		-- Reflect that on ui
+		local psi_val = ((self.stat_outfit["psi"] + self.stat_helm["psi"] + self.stat_arty["psi"] * 2 + self.stat_boost["psi"]) / self.stat_list["psi"].max)
+		if settings.use_game_values == "none" or psy_bar_patch then
+			psi_val = ((self.stat_outfit["psi"] + self.stat_helm["psi"] + self.stat_arty["psi"] + self.stat_boost["psi"]) / self.stat_list["psi"].max)
+		end
+		self.stat["psi"].bar:SetProgressPos( clamp( psi_val, 0, 1) )
+
+		local wound_val = ((self.stat_outfit["wound"] + self.stat_helm["wound"] + self.stat_arty["wound"]) / self.stat_list["wound"].max)
+		self.stat["wound"].bar:SetProgressPos( clamp( wound_val, 0, 1) )
+
+		local fire_wound_val = ((self.stat_outfit["fire_wound"] + self.stat_helm["fire_wound"] + self.stat_arty["fire_wound"]) / self.stat_list["fire_wound"].max)
+		self.stat["fire_wound"].bar:SetProgressPos( clamp( fire_wound_val, 0, 1) )
+	end
+
+	-- Special case for power (similar to engine method)
+	local power = actor:cast_Actor():conditions():V_SatietyPower() --db.actor.satiety
+	power = power + self.stat_arty["power"]
+	if outfit then
+		power = power + self.stat_outfit["power"]
+		local power_loss = outfit:cast_CustomOutfit().m_fPowerLoss or 0
+		if power_loss ~= 0 then
+			power = power / power_loss
+		end
+	else
+		power = power / 0.5
+	end
+	power = power / self.stat_list["power"].max
+	self.stat["power"].bar:SetProgressPos( clamp( power , 0, 15) )
+
+	if settings.gamma_ui_compatibility then
+		local satiety = actor:cast_Actor():conditions():GetSatiety()
+		satiety = (satiety - 0.1) / 5		-- 5.7
+		self.stat["power"].bar:SetProgressPos( clamp( satiety , 0, 0.2) )
+	end
+
+	-- Hunger Thirst Sleep compatibility
+	-- Satiety Bar
+	if self.stat["hunger"] then
+		local satiety = actor:cast_Actor():conditions():GetSatiety()
+		satiety = (satiety - 0.1) / 1.739		-- 5.7
+		self.stat["hunger"].bar:SetProgressPos( clamp( satiety , 0, 0.575) )
+	end
+
+	-- Thirst Bar
+	if self.stat["thirst"] and actor_status_thirst.get_last_drink and actor_status_thirst.get_thirst_blur_4 then
+		if settings.gamma_ui_compatibility then
+			local thirst = actor_status_thirst.get_last_drink()
+			local thirst_red_icon = actor_status_thirst.get_thirst_blur_4()
+			thirst = thirst_red_icon - thirst
+			thirst = (thirst / thirst_red_icon) / 5.65
+			self.stat["thirst"].bar:SetProgressPos( clamp( thirst, 0, 0.185))
+		else
+			local thirst = actor_status_thirst.get_last_drink()
+			local thirst_red_icon = actor_status_thirst.get_thirst_blur_4()
+			thirst = thirst_red_icon - thirst
+			thirst = (thirst / thirst_red_icon) / 1.926
+			self.stat["thirst"].bar:SetProgressPos( clamp( thirst, 0, 0.55))
+		end
+	end
+
+	-- Sleep bar
+	if self.stat["sleep"] and actor_status_sleep.get_last_sleep and actor_status_sleep.get_sleep_blur_4 then
+		if settings.gamma_ui_compatibility then
+			local sleep = actor_status_sleep.get_last_sleep()
+			local sleep_red_icon = actor_status_sleep.get_sleep_blur_4()
+			sleep = sleep_red_icon - sleep
+			sleep = (sleep / sleep_red_icon) / 5.65
+			self.stat["sleep"].bar:SetProgressPos( clamp( sleep, 0, 0.185))
+		else
+			local sleep = actor_status_sleep.get_last_sleep()
+			local sleep_red_icon = actor_status_sleep.get_sleep_blur_4()
+			sleep = sleep_red_icon - sleep
+			sleep = (sleep / sleep_red_icon) / 1.926
+			self.stat["sleep"].bar:SetProgressPos( clamp( sleep, 0, 0.55))
+		end
+	end
+
+
+-- Blinking Icons
+	for name,v in pairs(self.stat) do
+		v.ico_p:Show(false)
+		v.ico_n:Show(false)
+	end
+	
+	-- Health
+	local health_restore = self.stat_outfit["health_restore"] + self.stat_arty["health_restore"] + self.stat_boost["health_restore"]
+	if (actor.bleeding > 0) or (health_restore < 0) then
+		self.stat["health"].ico_n:Show(true)
+	elseif (health_restore > 0) then
+		self.stat["health"].ico_p:Show(true)
+	end
+	
+	-- Power
+
+	if not settings.gamma_ui_compatibility then
+		if (self.stat_boost["power"] < 0) then
+			self.stat["power"].ico_n:Show(true)
+		elseif (self.stat_boost["power"] > 0) then
+			self.stat["power"].ico_p:Show(true)
+		end
+	end
+	
+	-- Radiation
+	local radia_restore = self.stat_outfit["radia_restore"] + self.stat_arty["radia_restore"] + self.stat_boost["radia_restore"]
+	if (actor.radiation > 0) then
+		self.stat["radia"].ico_n:Show(true)
+	elseif (radia_restore < 0) or (self.stat_boost["radia"] > 0) then
+		self.stat["radia"].ico_p:Show(true)
+	end
+	
+	-- Psi
+	if (self.stat_boost["psi"] < 0) then
+		self.stat["psi"].ico_n:Show(true)
+	elseif (self.stat_boost["psi"] > 0) then
+		self.stat["psi"].ico_p:Show(true)
+	end
+	
+	-- Chemical
+	if (self.stat_boost["acid"] < 0) then
+		self.stat["acid"].ico_n:Show(true)
+	elseif (self.stat_boost["acid"] > 0) then
+		self.stat["acid"].ico_p:Show(true)
+	end
+end
+
+function ui_inventory.UIInventory:ResetBonusStats()
+	for name,_ in pairs(self.bonus_stat) do
+		self.bonus_stat[name].bar:SetProgressPos(0)
+		self.bonus_stat[name].value = 0
+	end
+end
+
+function ui_inventory.UIInventory:ResetBonusStatsColors()
+	if settings.efp_ui_compatibility then
+		self.bonus_stat["radia"].bar:SetColor(GetARGB(255, 253, 208, 23))
+		self.bonus_stat["acid"].bar:SetColor(GetARGB(255, 0, 255, 0))
+		self.bonus_stat["shock"].bar:SetColor(GetARGB(255, 255, 255, 0))
+		self.bonus_stat["fire"].bar:SetColor(GetARGB(255, 255, 0, 128))
+		self.bonus_stat["psi"].bar:SetColor(GetARGB(255, 0, 255, 255))
+		self.bonus_stat["wound"].bar:SetColor(GetARGB(255, 255, 128, 0))
+		self.bonus_stat["fire_wound"].bar:SetColor(GetARGB(255, 255, 255, 255))
+		self.bonus_stat["power"].bar:SetColor(GetARGB(255, 0, 128, 255))
+	else
+		for name,_ in pairs(self.bonus_stat) do
+			self.bonus_stat[name].bar:SetColor(read_colors("neutral"))
+		end
+	end
+end
+
+function ui_inventory.UIInventory:CalculatePowerBoost(p)
+	-- Special case for power (similar to engine method)
+	if p and not settings.gamma_ui_compatibility then
+		local actor = db.actor
+		local outfit = actor:item_in_slot(7)
+		local power = actor:cast_Actor():conditions():V_SatietyPower() --db.actor.satiety
+		local old_power = power + self.stat_arty["power"]
+		local new_power = power + self.stat_arty["power"] + p
+		if outfit then
+			old_power = old_power + self.stat_outfit["power"]
+			new_power = new_power + self.stat_outfit["power"]
+			local power_loss = outfit:cast_CustomOutfit().m_fPowerLoss or 0
+			if power_loss ~= 0 then
+				old_power = old_power / power_loss
+				new_power = new_power / power_loss
+			end
+		else
+			old_power = old_power / 0.5
+			new_power = new_power / 0.5
+		end
+		old_power = old_power / self.stat_list["power"].max
+		new_power = new_power / self.stat_list["power"].max
+		self.bonus_stat["power"].bar:SetProgressPos( clamp( new_power , 0, 15) )
+		if new_power > old_power then
+			self.bonus_stat["power"].bar:SetColor(read_colors("positive"))
+		elseif new_power == old_power then
+			self.bonus_stat["power"].bar:SetColor(read_colors("neutral"))
+		else
+			self.bonus_stat["power"].bar:SetColor(read_colors("negative"))
+		end
+	end
+end
+
+function ui_inventory.UIInventory:CalculateArtefactBoost(obj)
+	local sec = obj:section()
+	local cond = obj:condition()
+	local immunities_sec = SYS_GetParam(0, sec, "hit_absorbation_sect", sec)
+
+	-- self.bonus_stat["health_restore"] = self.bonus_stat["health_restore"] + ( cond * SYS_GetParam(2, sec, "health_restore_speed", 0) )
+	-- self.bonus_stat["radia_restore"]  = self.bonus_stat["radia_restore"]  + ( cond * SYS_GetParam(2, sec, "radiation_restore_speed", 0) )
+	
+	-- self.bonus_stat["power"].value      = cond * SYS_GetParam(2, sec, "power_restore_speed", 0)
+	-- self.bonus_stat["radia"].value      = cond * SYS_GetParam(2, immunities_sec, "radiation_immunity", 0)
+	-- self.bonus_stat["acid"].value       = cond * SYS_GetParam(2, immunities_sec, "chemical_burn_immunity", 0)
+	-- self.bonus_stat["shock"].value      = cond * SYS_GetParam(2, immunities_sec, "shock_immunity", 0)
+	-- self.bonus_stat["fire"].value       = cond * SYS_GetParam(2, immunities_sec, "burn_immunity", 0)
+	-- self.bonus_stat["psi"].value        = cond * SYS_GetParam(2, immunities_sec, "telepatic_immunity", 0)
+	-- self.bonus_stat["wound"].value      = cond * SYS_GetParam(2, immunities_sec, "wound_immunity", 0)
+	-- self.bonus_stat["fire_wound"].value = cond * SYS_GetParam(2, immunities_sec, "fire_wound_immunity", 0)
+	
+	-- Progress bars
+	local bar_list = dup_table(self.bar_list)
+	bar_list.power = "power_restore_speed"
+
+	for bar, immunity in pairs(bar_list) do
+		self.bonus_stat[bar].value = cond * (SYS_GetParam(2, sec, immunity) or SYS_GetParam(2, immunities_sec, immunity) or 0)
+		if settings.arx_compatibility and bar ~= "power" then
+			local initial_stats = self:GetARXImmunity(bar, self.stat_arty[bar])
+			local new_stats = self:GetARXImmunity(bar, self.stat_arty[bar] + self.bonus_stat[bar].value)
+			self.bonus_stat[bar].bar:SetProgressPos(clamp(new_stats, 0, 1))
+			if new_stats > initial_stats then
+				self.bonus_stat[bar].bar:SetColor(read_colors("positive"))
+			elseif new_stats == initial_stats then
+				self.bonus_stat[bar].bar:SetColor(read_colors("neutral"))
+			else
+				self.bonus_stat[bar].bar:SetColor(read_colors("negative"))
+			end
+		else
+			-- With non ARX exes, artefacts are having twice the effect on psy damage, first in engine, then in arszi_psy.script
+			-- Reflect that on ui
+			local initial_stats = (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar])
+			if bar == "psi" and (settings.use_game_values ~= "none" and not psy_bar_patch) then -- Psy attacks special behaviour
+				initial_stats = (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] * 2 + self.stat_boost[bar])
+			end
+
+			local new_stats = initial_stats + self.bonus_stat[bar].value
+			if bar == "psi" and (settings.use_game_values ~= "none" and not psy_bar_patch) then -- Psy attacks special behaviour
+				new_stats = initial_stats + self.bonus_stat[bar].value * 2
+			end
+
+			local result = new_stats / self.stat_list[bar].max
+			self.bonus_stat[bar].bar:SetProgressPos(clamp(result, 0, 1))
+			if new_stats > initial_stats then
+				self.bonus_stat[bar].bar:SetColor(read_colors("positive"))
+			elseif new_stats == initial_stats then
+				self.bonus_stat[bar].bar:SetColor(read_colors("neutral"))
+			else
+				self.bonus_stat[bar].bar:SetColor(read_colors("negative"))
+			end
+		end
+	end
+
+	self:CalculatePowerBoost(self.bonus_stat["power"].value)
+end
+
+function ui_inventory.UIInventory:CalculateBoosterBoost(obj)
+	local sf = string.find
+	local sec = obj:section()
+	local cond = obj:condition()
+	
+	local boost = {}
+	for k, v in pairs(boosters_table[sec]) do
+		local bar = self.boost_list[k]
+		if not boost[bar] then
+			boost[bar] = {
+				protection = 0,
+				immunity = 0,
+				restore = 0,
+			}
+		end
+
+		if sf(k, "protection") then
+			boost[bar].protection = v
+		elseif sf(k, "restore") then
+			boost[bar].restore = v
+		elseif sf(k, "immunity") then
+			boost[bar].immunity = v
+		end
+	end
+
+	local bar_list = dup_table(self.bar_list)
+	bar_list.power = "power_restore_speed"
+
+	-- db.actor:cast_Actor():conditions():BoosterForEach( function(booster_type, booster_time, booster_value)
+	-- 	local boost_id = self.boost_id[booster_type]
+	-- 	printf("!Booster: %s - %s - %s - %s", self.boost_id_inv[booster_type], booster_type, booster_time, booster_value)
+	-- 	if boost_id then
+	-- 		if boost_id == "wound" or boost_id == "fire_wound" then
+	-- 			local actor_immunity = SYS_GetParam(2, "actor_immunities_" .. get_console():get_string("g_game_difficulty"), self.bar_list[boost_id], 1)
+	-- 			self.stat_list[boost_id].max = self.stat_list[boost_id].max * ((actor_immunity - booster_value) / actor_immunity)
+	-- 		else
+	-- 			self.stat_boost[boost_id] = booster_value
+	-- 		end
+	-- 	end
+	-- end)
+
+	for bar, v in pairs(boost) do
+		if settings.arx_compatibility and bar ~= "power" then
+			local initial_stats = self:GetARXImmunity(bar, self.stat_arty[bar])
+			local new_stats = self:GetARXImmunity(bar, self.stat_arty[bar], v.protection)
+			local actor_immunity = SYS_GetParam(2, "actor_immunities_" .. get_console():get_string("g_game_difficulty"), bar_list[bar], 1)
+			new_stats = new_stats / ((actor_immunity - v.immunity) / actor_immunity)
+
+			printf("%s => %s", bar, new_stats)
+			self.bonus_stat[bar].bar:SetProgressPos(clamp(new_stats, 0, 1))
+			if new_stats > initial_stats then
+				self.bonus_stat[bar].bar:SetColor(read_colors("positive"))
+			elseif new_stats == initial_stats then
+				self.bonus_stat[bar].bar:SetColor(read_colors("neutral"))
+			else
+				self.bonus_stat[bar].bar:SetColor(read_colors("negative"))
+			end
+		else
+			-- With non ARX exes, artefacts are having twice the effect on psy damage, first in engine, then in arszi_psy.script
+			-- Reflect that on ui
+			local initial_stats = (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] + self.stat_boost[bar])
+			if bar == "psi" and (settings.use_game_values ~= "none" and not psy_bar_patch) then -- Psy attacks special behaviour
+				initial_stats = (self.stat_outfit[bar] + self.stat_helm[bar] + self.stat_arty[bar] * 2 + self.stat_boost[bar])
+			end
+
+			local new_stats = initial_stats + v.protection
+			initial_stats = initial_stats / self.stat_list[bar].max
+			new_stats = new_stats / self.stat_list[bar].max
+
+			local actor_immunity = SYS_GetParam(2, "actor_immunities_" .. get_console():get_string("g_game_difficulty"), bar_list[bar], 1)
+			new_stats = new_stats / ((actor_immunity - v.immunity) / actor_immunity)
+			self.bonus_stat[bar].bar:SetProgressPos(clamp(new_stats, 0, 1))
+
+			if new_stats > initial_stats then
+				self.bonus_stat[bar].bar:SetColor(read_colors("positive"))
+			elseif new_stats == initial_stats then
+				self.bonus_stat[bar].bar:SetColor(read_colors("neutral"))
+			else
+				self.bonus_stat[bar].bar:SetColor(read_colors("negative"))
+			end
+		end
+	end
+
+	self:CalculatePowerBoost(boost["power"].restore)
+	
+end
+
+function ui_inventory.UIInventory:ShowBonusStats(obj)
+	self:UpdateStats()
+	-- Dont show if no object received
+	if not (obj and obj:section()) then return end
+
+	-- Dont show if the bag is not actor_bag
+	if self.hover.bag ~= "actor_bag" then return end
+
+	if IsArtefact(obj) then
+		self:CalculateArtefactBoost(obj)
+	elseif IsBooster(obj) then
+		self:CalculateBoosterBoost(obj)
+	end
+	
+end
+
+function init_gui()
+	-- if not ui_inventory.GUI then
+	-- 	ui_inventory.GUI = ui_inventory.UIInventory()
+	-- end
+end
+
+function display_artefact_bonuses(obj)
+	init_gui()
+
+	if ui_inventory.GUI then
+		ui_inventory.GUI:ResetBonusStats()
+		local obj = obj or (function()
+			local bag = ui_inventory.GUI.hover.bag
+			local idx = ui_inventory.GUI.hover.idx
+			return ui_inventory.GUI.CC[bag]:GetObj(idx)
+		end)()
+		-- if obj then printf("current sec %s", obj:section()) else printf("current obj is nil") end
+		ui_inventory.GUI:ShowBonusStats(obj)
+	end
+end
+
+function display_artefact_bonuses_after_move()
+	-- Postpone on next tick
+	CreateTimeEvent("display_artefact_bonuses_after_move", "display_artefact_bonuses_after_move", 0, function()
+		if ui_inventory.GUI then
+			ui_inventory.GUI:UpdateInfo(true)
+
+			local obj = (function()
+				if ui_inventory.GUI.hover and ui_inventory.GUI.CC then
+					local bag = ui_inventory.GUI.hover.bag
+					local idx = ui_inventory.GUI.hover.idx
+					return bag and idx and ui_inventory.GUI.CC[bag] and ui_inventory.GUI.CC[bag]:GetObj(idx)
+				end
+			end)()
+
+			if obj then
+				ui_inventory.GUI:ResetBonusStats()
+				ui_inventory.GUI:ShowBonusStats(obj)
+			else 
+				ui_inventory.GUI:ResetBonusStatsColors()
+			end
+		end
+		return true
+	end)
+end
+
+function update_stats()
+	init_gui()
+
+	if ui_inventory.GUI then
+		ui_inventory.GUI:ResetBonusStats()
+	end
+end
+
+-- Patches
+local stats = utils_ui.prepare_stats_table
+local stats_prot_to_dmg = {
+	["fire_wound_protection"]    = {k = "fire_wound", factor = 1} ,
+	["burn_protection"]          = {k = "fire", factor = 10} ,
+	["shock_protection"]         = {k = "shock", factor = 10} ,
+	["chemical_burn_protection"] = {k = "acid", factor = 10} ,
+	["radiation_protection"]     = {k = "radia", factor = 10} ,
+	["telepatic_protection"]     = {k = "psi", factor = 1} ,
+	["wound_protection"]         = {k = "wound", factor = 1} ,
+	["strike_protection"]        = {k = "strike", factor = 1} ,
+	["explosion_protection"]     = {k = "explosion", factor = 1} ,
+}
+local og_stats_table
+utils_ui.prepare_stats_table = function()
+	stats()
+	if not og_stats_table then og_stats_table = dup_table(utils_ui.stats_table) end
+
+	for k, v in pairs(stats_prot_to_dmg) do
+		utils_ui.stats_table["outfit"][k]["magnitude"] = settings.use_game_values ~= "none" and 1 / (max_damage[v.k] * v.factor) or og_stats_table["outfit"][k]["magnitude"]
+	end
+end
+
+local function on_option_change()
+	load_settings()
+	-- settings.arx_compatibility = false
+
+	init_gui()
+
+	if ui_inventory.GUI then
+		-- Bar on the bottom
+		local _self = ui_inventory.GUI
+		_self:set_pos_and_size_all()
+		_self:set_max_values()
+		_self:ResetBonusStats()
+	end
+	utils_ui.prepare_stats_table()
+	print_table(max_damage)
+	-- print_table(boosters_table)
+end
+
+function actor_on_before_hit(s_hit,bone_id,flags)
+	if not ui_inventory.GUI then
+		ui_inventory.GUI = ui_inventory.UIInventory()
+	end
+
+	printf("hit, sec %s, power %s, type %s, protection %s", s_hit.draftsman and s_hit.draftsman:section(), s_hit.power, s_hit.type, ui_inventory.GUI:GetProtection(stat_to_dmg[s_hit.type]))
+end
+
+function on_game_start()
+	RegisterScriptCallback("actor_item_to_belt", display_artefact_bonuses_after_move)
+	RegisterScriptCallback("ActorMenu_on_item_focus_lost", update_stats)
+	RegisterScriptCallback("ActorMenu_on_item_focus_receive", display_artefact_bonuses)
+	RegisterScriptCallback("GUI_on_hide", update_stats)
+
+	RegisterScriptCallback("actor_on_first_update", on_option_change)
+	RegisterScriptCallback("on_game_load", load_settings)
+	RegisterScriptCallback("on_option_change", on_option_change)
+
+	--Debug
+	-- RegisterScriptCallback("actor_on_before_hit", actor_on_before_hit)
+end
