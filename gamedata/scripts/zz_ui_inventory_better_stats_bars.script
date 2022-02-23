@@ -530,7 +530,7 @@ end
 
 function ui_inventory.UIInventory:GetImmunity(bar, protection, booster_immunity, outfit, helm)
 	local x = protection or 0
-	local y = immunity
+	local y = booster_immunity
 
 	-- printf("%s: %s, %s", bar, x, y)
 
@@ -1104,7 +1104,7 @@ function ui_inventory.UIInventory:CalculateOutfitBoost(obj, outfit)
 		if settings.arx_compatibility and bar ~= "power" then
 			if outfit == "stat_helm" then
 				initial_stats = self:GetARXImmunity(bar)
-				new_stats = self:GetARXImmunity(bar, -self.stat_arty[bar], nil, nil, nil, self.bonus_stat[bar].value)
+				new_stats = self:GetARXImmunity(bar, nil, nil, nil, nil, self.bonus_stat[bar].value)
 			else
 				initial_stats = self:GetARXImmunity(bar)
 				new_stats = self:GetARXImmunity(bar, -self.stat_arty[bar], nil, nil, self.bonus_stat[bar].value)
@@ -1116,7 +1116,7 @@ function ui_inventory.UIInventory:CalculateOutfitBoost(obj, outfit)
 			-- Reflect that on ui
 			if outfit == "stat_helm" then
 				initial_stats = self:GetImmunity(bar)
-				new_stats = self:GetImmunity(bar, -self.stat_arty[bar], nil, nil, self.bonus_stat[bar].value)
+				new_stats = self:GetImmunity(bar, nil, nil, nil, self.bonus_stat[bar].value)
 			else
 				initial_stats = self:GetImmunity(bar)
 				new_stats = self:GetImmunity(bar, -self.stat_arty[bar], nil, self.bonus_stat[bar].value)
@@ -1126,7 +1126,7 @@ function ui_inventory.UIInventory:CalculateOutfitBoost(obj, outfit)
 		end
 	end
 
-	self:CalculatePowerBoost(-self.stat_arty["power"], nil, {power = self.bonus_stat["power"].value, outfit = c_obj, type = outfit})
+	self:CalculatePowerBoost(outfit == "stat_outfit" and -self.stat_arty["power"] or nil, nil, {power = self.bonus_stat["power"].value, outfit = c_obj, type = outfit})
 end
 
 function ui_inventory.UIInventory:ShowBonusStats(obj)
