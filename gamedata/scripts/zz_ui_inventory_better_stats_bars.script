@@ -16,6 +16,29 @@ local function get_median(t)
 	return odd(#t) and t[(#t + 1) / 2] or (t[#t / 2] + t[#t / 2 + 1]) / 2
 end
 
+-- Load the defaults
+local function load_defaults()
+	local t = {}
+	local op = better_stats_bars_mcm.op
+	for i, v in ipairs(op.gr) do
+		if v.def ~= nil then
+			t[v.id] = v.def
+		end
+	end
+	-- t.arx_compatibility = false
+	return t
+end
+local settings = load_defaults()
+
+local function load_settings()
+	settings = load_defaults()
+	if ui_mcm then
+		for k, v in pairs(settings) do
+			settings[k] = ui_mcm.get("better_stats_bars/" .. k)
+		end
+	end
+end
+
 -- Building max damages table
 ignore_sections = { -- Sections to ignore
 	["pri_a17_gauss_rifle"] = true,
@@ -222,7 +245,6 @@ ignore_sections = { -- Sections to ignore
 stat_to_dmg = {
 	burn = "fire",
 	light_burn = "fire",
-	fire = "fire",
 	shock = "shock",
 	chemical_burn = "acid",
 	acid = "acid",
@@ -383,29 +405,6 @@ end
 build_tables()
 for k, v in pairs(damages) do
 	table.sort(damages[k])
-end
-
--- Load the defaults
-local function load_defaults()
-	local t = {}
-	local op = better_stats_bars_mcm.op
-	for i, v in ipairs(op.gr) do
-		if v.def ~= nil then
-			t[v.id] = v.def
-		end
-	end
-	-- t.arx_compatibility = false
-	return t
-end
-local settings = load_defaults()
-
-local function load_settings()
-	settings = load_defaults()
-	if ui_mcm then
-		for k, v in pairs(settings) do
-			settings[k] = ui_mcm.get("better_stats_bars/" .. k)
-		end
-	end
 end
 
 local function read_colors(color)
