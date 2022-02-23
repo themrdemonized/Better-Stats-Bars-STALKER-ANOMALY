@@ -528,9 +528,12 @@ function ui_inventory.UIInventory:GetActorImmunity(bar)
 	return SYS_GetParam(2, "actor_immunities_" .. get_console():get_string("g_game_difficulty"), self.bar_list[bar], 1)
 end
 
-function ui_inventory.UIInventory:GetImmunity(bar, protection, booster_immunity, outfit, helm)
-	local x = protection or 0
-	local y = booster_immunity
+function ui_inventory.UIInventory:GetImmunity(bar, stats)
+	local stats = stats or {}
+	local x = stats.protection or 0
+	local y = stats.booster_immunity
+	local outfit = stats.outfit
+	local helm = stats.helm
 
 	-- printf("%s: %s, %s", bar, x, y)
 
@@ -546,10 +549,13 @@ function ui_inventory.UIInventory:GetImmunity(bar, protection, booster_immunity,
 end
 
 -- ARX formula
-function ui_inventory.UIInventory:GetARXImmunity(bar, artefact, booster_protection, booster_immunity, outfit, helm)
-	local x = artefact or 0
-	local y = booster_protection or 0
-	local z = booster_immunity
+function ui_inventory.UIInventory:GetARXImmunity(bar, stats)
+	local stats = stats or {}
+	local x = stats.artefact or 0
+	local y = stats.booster_protection or 0
+	local z = stats.booster_immunity
+	local outfit = stats.outfit
+	local helm = stats.helm
 
 	-- Special case for psy damage
 	if bar == "psi" then
@@ -973,13 +979,13 @@ function ui_inventory.UIInventory:CalculateArtefactBoost(obj)
 		self.bonus_stat[bar].value = cond * (SYS_GetParam(2, sec, immunity) or SYS_GetParam(2, immunities_sec, immunity) or 0)
 		if settings.arx_compatibility and bar ~= "power" then
 			local initial_stats = self:GetARXImmunity(bar)
-			local new_stats = self:GetARXImmunity(bar, self.bonus_stat[bar].value)
+			local new_stats = self:GetARXImmunity(bar, {artefact = self.bonus_stat[bar].value})
 			self:SetBonusStatValue(bar, initial_stats, new_stats)
 		else
 			-- With non ARX exes, artefacts are having twice the effect on psy damage, first in engine, then in arszi_psy.script
 			-- Reflect that on ui
 			local initial_stats = self:GetImmunity(bar)
-			local new_stats = self:GetImmunity(bar, self.bonus_stat[bar].value)
+			local new_stats = self:GetImmunity(bar, {protection = self.bonus_stat[bar].value})
 			self:SetBonusStatValue(bar, initial_stats, new_stats)	
 		end
 	end
@@ -1019,15 +1025,15 @@ function ui_inventory.UIInventory:CalculateBoosterBoost(obj)
 
 	for bar, v in pairs(boost) do
 		if settings.arx_compatibility and bar ~= "power" then
-			local initial_stats = self:GetARXImmunity(bar, nil)
-			local new_stats = self:GetARXImmunity(bar, nil, v.protection, v.immunity)
+			local initial_stats = self:GetARXImmunity(bar)
+			local new_stats = self:GetARXImmunity(bar, {booster_protection = v.protection, booster_immunity = v.immunity})
 
 			self:SetBonusStatValue(bar, initial_stats, new_stats)
 		else
 			-- With non ARX exes, artefacts are having twice the effect on psy damage, first in engine, then in arszi_psy.script
 			-- Reflect that on ui
 			local initial_stats = self:GetImmunity(bar)
-			local new_stats = self:GetImmunity(bar, v.protection, v.immunity)
+			local new_stats = self:GetImmunity(bar, {protection = v.protection, booster_immunity =  v.immunity})
 
 			self:SetBonusStatValue(bar, initial_stats, new_stats)
 		end
@@ -1101,26 +1107,17 @@ function ui_inventory.UIInventory:CalculateOutfitBoost(obj, outfit)
 	for bar, v in pairs(bar_list) do
 		local initial_stats
 		local new_stats
+		local k = outfit == "stat_outfit" and "outfit" or "helm"
 		if settings.arx_compatibility and bar ~= "power" then
-			if outfit == "stat_helm" then
-				initial_stats = self:GetARXImmunity(bar)
-				new_stats = self:GetARXImmunity(bar, nil, nil, nil, nil, self.bonus_stat[bar].value)
-			else
-				initial_stats = self:GetARXImmunity(bar)
-				new_stats = self:GetARXImmunity(bar, -self.stat_arty[bar], nil, nil, self.bonus_stat[bar].value)
-			end
+			initial_stats = self:GetARXImmunity(bar)
+			new_stats = self:GetARXImmunity(bar, {artefact = outfit == "stat_outfit" and -self.stat_arty[bar], [k] = self.bonus_stat[bar].value})
 
 			self:SetBonusStatValue(bar, initial_stats, new_stats)
 		else
 			-- With non ARX exes, artefacts are having twice the effect on psy damage, first in engine, then in arszi_psy.script
 			-- Reflect that on ui
-			if outfit == "stat_helm" then
-				initial_stats = self:GetImmunity(bar)
-				new_stats = self:GetImmunity(bar, nil, nil, nil, self.bonus_stat[bar].value)
-			else
-				initial_stats = self:GetImmunity(bar)
-				new_stats = self:GetImmunity(bar, -self.stat_arty[bar], nil, self.bonus_stat[bar].value)
-			end
+			initial_stats = self:GetImmunity(bar)
+			new_stats = self:GetImmunity(bar, {protection = outfit == "stat_outfit" and -self.stat_arty[bar], [k] = self.bonus_stat[bar].value})
 
 			self:SetBonusStatValue(bar, initial_stats, new_stats)
 		end
