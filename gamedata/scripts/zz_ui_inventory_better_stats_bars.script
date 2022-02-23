@@ -1223,7 +1223,8 @@ utils_ui.prepare_stats_table = function()
 	if not og_stats_table then og_stats_table = dup_table(utils_ui.stats_table) end
 
 	for k, v in pairs(stats_prot_to_dmg) do
-		utils_ui.stats_table["outfit"][k]["magnitude"] = settings.use_game_values ~= "none" and 1 / (max_damage[v.k] * v.factor) or og_stats_table["outfit"][k]["magnitude"]
+		-- Include compatibility with StatsDisplay mod
+		utils_ui.stats_table["outfit"][k]["magnitude"] = settings.use_game_values ~= "none" and (ish_item_stats and 100 or 1) / (max_damage[v.k] * v.factor) or og_stats_table["outfit"][k]["magnitude"]
 	end
 end
 
