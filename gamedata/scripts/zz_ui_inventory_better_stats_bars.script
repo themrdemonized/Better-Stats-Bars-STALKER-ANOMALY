@@ -1,4 +1,17 @@
 -- UTILS
+--Protected function call to prevent crashes to desktop
+--Prints error in console if occured, otherwise proceed normally
+--Use for test only, slower than usual
+local try = try or function(func, ...)
+	local status, error_or_result = pcall(func, ...)
+	if not status then
+		printf(error_or_result)
+		return false
+	else
+		return error_or_result
+	end
+end
+
 boosters_table = {}
 function IsBooster(obj, sec)
 	return boosters_table[obj and obj:section() or sec or ""]
@@ -1152,8 +1165,10 @@ function init_gui()
 	-- end
 end
 
+local hovered_obj
 function display_artefact_bonuses(obj)
 	init_gui()
+	hovered_obj = obj
 
 	if ui_inventory.GUI then
 		ui_inventory.GUI:ResetBonusStats()
@@ -1195,6 +1210,7 @@ end
 
 function update_stats()
 	init_gui()
+	hovered_obj = nil
 
 	if ui_inventory.GUI then
 		ui_inventory.GUI:ResetBonusStats()
@@ -1222,6 +1238,255 @@ utils_ui.prepare_stats_table = function()
 	for k, v in pairs(stats_prot_to_dmg) do
 		-- Include compatibility with StatsDisplay mod
 		utils_ui.stats_table["outfit"][k]["magnitude"] = settings.use_game_values ~= "none" and (ish_item_stats and 100 or 1) / (max_damage[v.k] * v.factor) or og_stats_table["outfit"][k]["magnitude"]
+	end
+end
+
+full_stats_keys = {
+	[DIK_keys.DIK_LMENU] = true, 
+}
+if utils_ui.grok_keybind then full_stats_keys[utils_ui.grok_keybind] = true end
+local show_full_stats = false
+
+-- Icon coloring base on inventory mode and interaction
+clr_list = {
+	["def"]         = GetARGB(255, 255, 255, 255),
+	["red"]         = GetARGB(255, 255, 50, 50),
+	["green"]       = GetARGB(255, 100, 255, 150),
+	["blue"]        = GetARGB(255, 100, 150, 255),
+	["black"]       = GetARGB(255, 0, 0, 0),
+	
+	["drag"]        = GetARGB(150, 255, 255, 255),
+	["hide"]        = GetARGB(70, 255, 255, 255),
+	["shadow"]      = GetARGB(200, 20, 20, 20),
+	["hide_shadow"] = GetARGB(70, 20, 20, 20),
+	
+	["p1"]          = GetARGB(255, 170, 170, 170),
+	["n1"]          = GetARGB(255, 200, 50, 50),
+	["p2"]          = GetARGB(255, 51, 255, 102),
+	["n2"]          = GetARGB(255, 204, 0, 51),
+	
+	["info_def"]    = GetARGB(200, 255, 255, 255),
+	["info_p"]      = GetARGB(255, 56, 209, 115),
+	["info_n"]      = GetARGB(255, 238, 28, 36),
+	["info_p_txt"]  = GetARGB(200, 100, 255, 100),
+	["info_n_txt"]  = GetARGB(200, 255, 100, 100),
+}
+
+-- Patch if GAMMA's UI mod is not loaded
+if not utils_ui.grok_keybind then
+	local og_get_stats_value = utils_ui.get_stats_value
+	utils_ui.get_stats_value = function(obj, sec, gr, stat)
+		utils_ui.prepare_stats_table()
+		if not gr then return end
+
+		local group
+		if type(gr) == "string" then
+			group = gr
+		else
+			for k, v in pairs(utils_ui.stats_table) do
+				for k1, v1 in pairs(v) do
+					if gr == v1 then
+						group = k
+						break
+					end
+				end
+			end
+		end
+		local value = og_get_stats_value(obj, sec, gr, stat)
+
+		if value then
+			if obj and gr.condition and obj:condition() > 0 then
+				-- For outfits, the displayed values by condition is bugged due to multiplying the condition twice
+				-- First in engine (GetDefHitTypeProtection)
+				-- Then in get_stats_value function
+				-- Roll back this shit
+				if group and group == "outfit" then
+					value = value / obj:condition()
+				end
+
+				if show_full_stats then
+					return value / obj:condition()
+				else
+					return value
+				end
+		    end
+		end
+		return value
+	end
+end
+
+function utils_ui.UIInfoItem:UpdateStats()
+	local obj = hovered_obj
+	-- Don't update if no object
+	if not obj then return end
+
+	-- Don't update if no condition exists
+	if not obj.condition then return end
+
+	local sec = hovered_obj:section()
+	local typ = self:GetType(sec)
+	if not utils_ui.stats_table[typ] then return end
+	
+	-- Comparison
+	local obj_b
+	if self.can_compare and obj then
+		local cls = obj:clsid()
+		local slot = SYS_GetParam(2,sec,"slot",-1) + 1
+		obj_b = slot > 0 and db.actor:item_in_slot(slot)
+	end
+	
+	local v = utils_ui.stats_table[typ]
+	local cnt, y = 0, 0
+	local cnt_last
+	for stat,gr in spairs(v, utils_ui.sort_by_index) do
+		
+		-- get stat value
+		local val_a = utils_ui.get_stats_value(obj, sec, gr, stat)
+		-- printf("%s, %s", stat, val_a)
+		if val_a then
+			if gr.show_always or ((not gr.show_always ) and val_a ~= 0) then
+				cnt = cnt + 1
+				local ele = self.stats[cnt]
+				
+				-- Set up icon
+				local icon_p = gr.icon_p
+				local icon_n = (gr.icon_n ~= "") and gr.icon_n or icon_p
+				local icon = val_a < 0 and icon_n or icon_p
+				if gr.sign_inverse then
+					icon = val_a < 0 and icon_p or icon_n
+				end
+				ele.icon:InitTexture( icon )
+				
+				-- Set up name
+				ele.cap:SetText( game.translate_string(gr.name) )
+				
+				-- Reset
+				ele.bar2:Show(false)
+				ele.bar1:Show(false)
+				ele.txt:Show(false)
+				ele.comp:Show(false)
+				
+				-- Progress bar
+				if gr.track then
+					local valbar_a = clamp((math.abs(val_a) * gr.magnitude), 0, 1)
+					
+					-- Comparison item
+					local val_b = obj_b and utils_ui.get_stats_value(obj_b, obj_b:section(), gr, stat)
+					local valbar_b = val_b and clamp((math.abs(val_b) * gr.magnitude), 0, 1)
+					if valbar_b and (valbar_a ~= valbar_b) then
+					
+						-- If focued item's value is bigger than slot item's value -> focued item's bar: green + 2nd layer
+						if valbar_a > valbar_b then
+							ele.bar1:SetProgressPos( valbar_b )
+							ele.bar1:SetColor( clr_list["info_def"] )
+							
+							ele.bar2:SetProgressPos( valbar_a )
+							ele.bar2:SetColor( clr_list["info_p"] )
+							
+							ele.comp:SetTextColor( clr_list["info_p_txt"] )
+							
+						-- If focued item's value is smaller than slot item's value -> focued item's bar: red + 1nd layer
+						else
+							ele.bar1:SetProgressPos( valbar_a )
+							ele.bar1:SetColor( clr_list["info_def"] )
+							
+							ele.bar2:SetProgressPos( valbar_b )
+							ele.bar2:SetColor( clr_list["info_n"] )
+							
+							ele.comp:SetTextColor( clr_list["info_n_txt"] )
+						end
+						
+						local diff_val = math.ceil( (valbar_a - valbar_b) * 100 )
+						ele.comp:SetText( (diff_val > 0 and "+" or "") .. diff_val .. "%" )
+						ele.comp:Show(true)
+						ele.bar1:Show(true)
+						ele.bar2:Show(true)
+						ele.bar1:ShowBackground(false)
+						
+					-- No comparison
+					else
+						ele.bar1:SetProgressPos( valbar_a )
+						ele.bar1:SetColor( clr_list["info_def"] )
+						ele.bar1:Show(true)
+						ele.bar1:ShowBackground(true)
+					end
+					
+				-- Text
+				elseif ele.txt then
+					local valbar_a = val_a * gr.magnitude
+					local unit = gr.unit and gr.unit ~= "" and game.translate_string(gr.unit) or ""
+					local clr = valbar_a >= 0 and clr_list["p1"] or clr_list["n1"]
+					valbar_a = math.ceil(valbar_a)
+					
+					if gr.sign_inverse then
+						clr = valbar_a < 0 and clr_list["p1"] or clr_list["n1"]
+						--valbar_a = -1 * valbar_a -- invert sign again if needed
+					end
+					local sign = gr.sign and valbar_a > 0 and "+" or ""
+
+					-- Comparison item
+					local val_b = obj_b and utils_ui.get_stats_value(obj_b, obj_b:section(), gr, stat)
+					local valbar_b = val_b and val_b * gr.magnitude
+					if valbar_b and (valbar_a ~= valbar_b) then
+						local diff_val = math.ceil(valbar_a - valbar_b)
+						ele.comp:SetText( "(" .. (diff_val > 0 and "+" or "") .. diff_val .. ")" )
+						ele.comp:Show(true)
+						clr = (valbar_a > valbar_b) and clr_list["info_p_txt"] or clr_list["info_n_txt"]
+					end
+					
+					if gr.sign_inverse_txt then
+						if valbar_a > 0 then
+							sign = "-"
+						elseif valbar_a < 0 then
+							valbar_a = -1 * valbar_a
+							sign = "+"
+						end
+					end
+					
+					ele.txt:SetText( sign .. valbar_a .. " " .. unit )
+					ele.txt:SetTextColor( clr )
+					ele.txt:Show(true)
+				end
+				
+				
+				y = y + ele.base:GetHeight()
+				--printf("stat ele [%s] [%s] | cnt: %s - y: %s - value: %s", sec, stat, cnt, y, val_a)
+				
+				local ele_prev = cnt_last and self.stats[cnt_last]
+				self:Sync_Y(ele_prev and ele_prev.base, ele.base, 0)
+				cnt_last = cnt
+
+				ele.base:Show(true)
+			end
+		end
+	end
+
+	self.stats_dialog:SetWndSize(vector2():set( self.stats_dialog:GetWidth() , y + 10 ))
+	self.stats_dialog:Show(true)
+end
+
+function update_gui(gui)
+	if gui and gui.item_info then
+		local self = gui.item_info
+		self:UpdateStats()
+	end
+end
+
+function on_key_press(key)
+	if full_stats_keys[key] then
+		try(function()
+			show_full_stats = true
+			update_gui(ui_inventory.GUI)
+		end)		
+	end
+end
+
+function on_key_release(key)
+    if full_stats_keys[key] then
+    	try(function()
+			show_full_stats = false
+			update_gui(ui_inventory.GUI)
+    	end)
 	end
 end
 
@@ -1258,6 +1523,8 @@ function on_game_start()
 	RegisterScriptCallback("ActorMenu_on_item_focus_lost", update_stats)
 	RegisterScriptCallback("ActorMenu_on_item_focus_receive", display_artefact_bonuses)
 	RegisterScriptCallback("GUI_on_hide", update_stats)
+	RegisterScriptCallback("on_key_press", on_key_press)
+	RegisterScriptCallback("on_key_release", on_key_release)
 
 	RegisterScriptCallback("actor_on_first_update", on_option_change)
 	RegisterScriptCallback("on_game_load", load_settings)
