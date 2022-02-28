@@ -328,7 +328,7 @@ function build_tables()
 
 	ini_sys:section_for_each(function(sec)
 		if not ignore_sections[sec] then
-			if SYS_GetParam(2, sec, "boost_time") then -- Is Booster
+			if SYS_GetParam(2, sec, "boost_time", 0) > 0 then -- Is Booster
 				boosters_table[sec] = (function() 
 					local t = {}
 					for i = 1, #boost_table do
@@ -922,6 +922,8 @@ function ui_inventory.UIInventory:CalculatePowerBoost(p, booster, new_outfit)
 				else
 					new_power = new_power + new_outfit.power + self.stat_outfit["power"]
 				end
+			else
+				new_power = new_power + self.stat_outfit["power"] + self.stat_helm["power"]
 			end
 			local power_loss = (outfit and outfit:cast_CustomOutfit().m_fPowerLoss or 0)
 			old_power = old_power / (power_loss ~= 0 and power_loss or 0.5)
