@@ -17,6 +17,11 @@ function IsBooster(obj, sec)
 	return boosters_table[obj and obj:section() or sec or ""]
 end
 
+food_table = {}
+function IsFood(obj, sec)
+	return food_table[obj and obj:section() or sec or ""]
+end
+
 local function get_middle(t)
 	local s = 0
 	for i = 1, #t do
@@ -296,6 +301,7 @@ damage_threshold = {
 damages = {}
 max_damage = {}
 function build_tables()
+	empty_table(damages)
 	local t = {}
 	local function add_damage(dmg, k)
 		if not t[k] then 
@@ -324,6 +330,14 @@ function build_tables()
 		"boost_explosion_immunity",
 		"boost_fire_wound_immunity",
 		"boost_power_restore",
+		"boost_health_restore",
+	}
+
+	local food_eat_table = {
+		"eat_satiety",
+		"eat_sleepiness",
+		"eat_thirstiness",
+		"eat_health",
 	}
 
 	ini_sys:section_for_each(function(sec)
@@ -332,13 +346,22 @@ function build_tables()
 				boosters_table[sec] = (function() 
 					local t = {}
 					for i = 1, #boost_table do
-						if SYS_GetParam(2, sec, boost_table[i], 0) > 0 then
+						if SYS_GetParam(2, sec, boost_table[i], 0) ~= 0 then
 							t[boost_table[i]] = SYS_GetParam(2, sec, boost_table[i], 0)
 						end
 					end
+					t.boost_time = SYS_GetParam(2, sec, "boost_time", 0)
 					return t
 				end)()
-			end 
+			end
+
+			for i = 1, #food_eat_table do
+				if SYS_GetParam(2, sec, food_eat_table[i], 0) ~= 0 then -- Is Food
+					if not food_table[sec] then food_table[sec] = {} end
+					food_table[sec][food_eat_table[i]] = SYS_GetParam(2, sec, food_eat_table[i], 0)
+				end
+			end
+
 			local hit_type = SYS_GetParam(0, sec, "hit_type") or SYS_GetParam(0, sec, "hit_type_blast")
 			if hit_type and stat_to_dmg[hit_type] then
 				local k = stat_to_dmg[hit_type]
@@ -371,13 +394,14 @@ function build_tables()
 					for _, v in pairs(t) do
 						local s = str_explode(v, ",")
 						local d = #s == 11 and s[2] and tonumber(s[2]) or 0
+						d = settings.use_game_values == "max_no_mines" and k ~= "wound" and 0 or d 
 						if d > max and d <= damage_threshold[k] then max = d end
 					end
 					dmg = max
 				else
 					local d = SYS_GetParam(2, sec, "max_start_power") or 0
 					if d > 0 then
-						local scale = SYS_GetParam(0, sec, "class", "") == "ZS_RADIO" and 0.1 or 1
+						local scale = SYS_GetParam(0, sec, "class", "") == "ZS_RADIO" and 0.1 or (settings.use_game_values == "max_no_mines" and k ~= "shock" and 0 or 1)
 						dmg = d * scale
 						-- printf("zone section %s, power %s, scale %s hit type %s", sec, dmg, scale, k)
 					end
@@ -393,7 +417,7 @@ function build_tables()
 				-- Controller tube damage extra case
 				local tube_damage = SYS_GetParam(2, sec, "tube_damage")
 				if tube_damage and tube_damage > 0 then
-					add_damage(math.min(tube_damage, 1), "psi")
+					add_damage(math.min(settings.use_game_values == "max_no_mines" and 0 or tube_damage * 0.75, 1), "psi") -- Multiply by 0.75 due to dependence on distance for averageness
 				end
 			end
 		end
@@ -420,6 +444,8 @@ function ui_inventory.UIInventory:set_max_values(reset)
 		if reset then
 			self.stat_list[bar].max = self.og_max_stat_list[bar]
 		elseif settings.use_game_values == "max" then
+			self.stat_list[bar].max = max_damage[bar]
+		elseif settings.use_game_values == "max_no_mines" then
 			self.stat_list[bar].max = max_damage[bar]
 		elseif settings.use_game_values == "middle" then
 			self.stat_list[bar].max = get_middle(damages[bar])
@@ -889,7 +915,8 @@ end
 function ui_inventory.UIInventory:SetBonusStatValue(bar, old, new, min, max)
 	local min = min or 0
 	local max = max or 1
-	self.bonus_stat[bar].bar:SetProgressPos( clamp( new , min, max) )
+	local new = clamp(new, min, max)
+	self.bonus_stat[bar].bar:SetProgressPos(new)
 	if new > old then
 		self.bonus_stat[bar].bar:SetColor(read_colors("positive"))
 	elseif new == old then
@@ -1022,6 +1049,13 @@ function ui_inventory.UIInventory:CalculateBoosterBoost(obj)
 	end
 
 	self:CalculatePowerBoost(nil, boost["power"] and boost["power"].restore)
+
+	-- Special case for health boost, show resulting total health
+	if boosters_table[sec].boost_health_restore then
+		local actor = db.actor
+		self.bonus_stat["health"].value = actor.health + (boosters_table[sec].boost_health_restore or 0) * 10 * (boosters_table[sec].boost_time or 0)
+		self:SetBonusStatValue("health", actor.health, self.bonus_stat["health"].value)
+	end
 end
 
 function ui_inventory.UIInventory:CalculateOutfitBoost(obj, outfit, full_stats)
@@ -1109,6 +1143,85 @@ function ui_inventory.UIInventory:CalculateOutfitBoost(obj, outfit, full_stats)
 	self:CalculatePowerBoost(outfit == "stat_outfit" and -self.stat_arty["power"] or nil, nil, {power = self.bonus_stat["power"].value, outfit = c_obj, type = outfit})
 end
 
+function ui_inventory.UIInventory:CalculateFoodBoost(obj)
+	local sf = string.find
+	local sec = obj:section()
+	local actor = db.actor
+
+	self.bonus_stat["health"].value = (self.bonus_stat["health"].value ~= 0 and self.bonus_stat["health"].value or actor.health) + (food_table[sec].eat_health or 0)
+	self:SetBonusStatValue("health", actor.health, self.bonus_stat["health"].value)
+
+	if settings.gamma_ui_compatibility then
+		local satiety = actor:cast_Actor():conditions():GetSatiety()
+		self.bonus_stat["power"].value = clamp(satiety + (food_table[sec].eat_satiety or 0), 0, 1)
+		satiety = (satiety - 0.1) / 5
+		self.bonus_stat["power"].value = (self.bonus_stat["power"].value - 0.1) / 5
+		self:SetBonusStatValue("power", clamp(satiety, 0, 0.2), self.bonus_stat["power"].value, 0, 0.2)
+
+		-- Thirst Bar
+		if self.stat["thirst"] and actor_status_thirst.get_last_drink and actor_status_thirst.get_thirst_blur_4 then
+			local thirst = actor_status_thirst.get_last_drink()
+			local thirst_red_icon = actor_status_thirst.get_thirst_blur_4()
+			self.bonus_stat["thirst"].value = clamp(thirst + (food_table[sec].eat_thirstiness or 0) * 1000, thirst_red_icon)
+			
+			thirst = thirst_red_icon - thirst
+			thirst = (thirst / thirst_red_icon) / 5.65
+			self.bonus_stat["thirst"].value = thirst_red_icon - self.bonus_stat["thirst"].value
+			self.bonus_stat["thirst"].value = (self.bonus_stat["thirst"].value / thirst_red_icon) / 5.65
+			self:SetBonusStatValue("thirst", clamp( thirst, 0, 0.185), self.bonus_stat["thirst"].value, 0, 0.185)
+		end
+
+		-- Sleep bar
+		if self.stat["sleep"] and actor_status_sleep.get_last_sleep and actor_status_sleep.get_sleep_blur_4 then
+			local sleep = actor_status_sleep.get_last_sleep()
+			local sleep_red_icon = actor_status_sleep.get_sleep_blur_4()
+			self.bonus_stat["sleep"].value = clamp(sleep + (food_table[sec].eat_sleepiness or 0) * 1000, sleep_red_icon)
+
+			sleep = sleep_red_icon - sleep
+			sleep = (sleep / sleep_red_icon) / 5.65
+			self.bonus_stat["sleep"].value = sleep_red_icon - self.bonus_stat["sleep"].value
+			self.bonus_stat["sleep"].value = (self.bonus_stat["sleep"].value / sleep_red_icon) / 5.65
+			self:SetBonusStatValue("sleep", clamp( sleep, 0, 0.185), self.bonus_stat["sleep"].value, 0, 0.185)
+		end
+	else
+		-- Hunger Thirst Sleep compatibility
+		-- Satiety Bar
+		if self.stat["hunger"] then
+			local satiety = actor:cast_Actor():conditions():GetSatiety()
+			self.bonus_stat["hunger"].value = clamp(satiety + (food_table[sec].eat_satiety or 0), 0, 1)
+			satiety = (satiety - 0.1) / 1.739
+			self.bonus_stat["hunger"].value = (self.bonus_stat["hunger"].value - 0.1) / 1.739
+			self:SetBonusStatValue("hunger", clamp( satiety , 0, 0.575), self.bonus_stat["hunger"].value, 0, 0.575)
+		end
+
+		-- Thirst Bar
+		if self.stat["thirst"] and actor_status_thirst.get_last_drink and actor_status_thirst.get_thirst_blur_4 then
+			local thirst = actor_status_thirst.get_last_drink()
+			local thirst_red_icon = actor_status_thirst.get_thirst_blur_4()
+			self.bonus_stat["thirst"].value = clamp(thirst + (food_table[sec].eat_thirstiness or 0) * 1000, 0, thirst_red_icon)
+			
+			thirst = thirst_red_icon - thirst
+			thirst = (thirst / thirst_red_icon) / 1.926
+			self.bonus_stat["thirst"].value = thirst_red_icon - self.bonus_stat["thirst"].value
+			self.bonus_stat["thirst"].value = (self.bonus_stat["thirst"].value / thirst_red_icon) / 1.926
+			self:SetBonusStatValue("thirst", clamp( thirst, 0, 0.55), self.bonus_stat["thirst"].value, 0, 0.55)
+		end
+
+		-- Sleep bar
+		if self.stat["sleep"] and actor_status_sleep.get_last_sleep and actor_status_sleep.get_sleep_blur_4 then
+			local sleep = actor_status_sleep.get_last_sleep()
+			local sleep_red_icon = actor_status_sleep.get_sleep_blur_4()
+			self.bonus_stat["sleep"].value = clamp(sleep + (food_table[sec].eat_sleepiness or 0) * 1000, 0, sleep_red_icon)
+			
+			sleep = sleep_red_icon - sleep
+			sleep = (sleep / sleep_red_icon) / 1.926
+			self.bonus_stat["sleep"].value = sleep_red_icon - self.bonus_stat["sleep"].value
+			self.bonus_stat["sleep"].value = (self.bonus_stat["sleep"].value / sleep_red_icon) / 1.926
+			self:SetBonusStatValue("sleep", clamp( sleep, 0, 0.55), self.bonus_stat["sleep"].value, 0, 0.55)
+		end
+	end
+end
+
 function ui_inventory.UIInventory:ShowBonusStats(obj, full_stats)
 	self:UpdateStats(show_full_stats or full_stats)
 	-- Dont show if no object received
@@ -1125,6 +1238,10 @@ function ui_inventory.UIInventory:ShowBonusStats(obj, full_stats)
 		self:CalculateOutfitBoost(obj, "stat_outfit", show_full_stats or full_stats)
 	elseif IsHeadgear(obj) then
 		self:CalculateOutfitBoost(obj, "stat_helm", show_full_stats or full_stats)
+	end
+
+	if IsFood(obj) then
+		self:CalculateFoodBoost(obj)
 	end
 	
 end
@@ -1467,6 +1584,7 @@ end
 
 local function on_option_change()
 	load_settings()
+	build_tables()
 	init_gui()
 
 	if ui_inventory.GUI then

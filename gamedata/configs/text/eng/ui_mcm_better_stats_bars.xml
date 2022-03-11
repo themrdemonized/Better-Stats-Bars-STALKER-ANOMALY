@@ -77,7 +77,7 @@
 		<text>Use Game Values</text>
 	</string>
 	<string id="ui_mcm_better_stats_bars_use_game_values_desc">
-		<text>Enabling this option will make bars represent protection against actual game threats (npcs, mutants, anomalies), based on their damage values, elemental types, and also includes corrected behaviour of outfit and helmet protection. You can choose these options \n \n None: disabling the option \n \n Max: maximum of the bar represents maximum damage possible to receive. For this case, the 1/3 of the bar usually represents fire, acid and psy fields, weak mutants and pistol caliber firearms. 2/3 of the bar represents anomaly mines such as electric, gravitational anomalies, burners and acid pools, psy dog attacks, average strength mutants and intermediate firearms. Full bar represents protection against strongest mines, fields, controller attacks, strongest mutants and high caliber firearms.</text>
+		<text>Enabling this option will make bars represent protection against actual game threats (npcs, mutants, anomalies), based on their damage values, elemental types, and also includes corrected behaviour of outfit and helmet protection. You can choose these options \n \n None: disabling the option \n \n Max: maximum of the bar represents maximum damage possible to receive. For this case, the 1/3 of the bar usually represents fire, acid and psy fields, weak mutants and pistol caliber firearms. 2/3 of the bar represents anomaly mines such as electric, gravitational anomalies, burners and acid pools, psy dog attacks, average strength mutants and intermediate firearms. Full bar represents protection against strongest mines, fields, controller attacks, strongest mutants and high caliber firearms. \n \n Max (No Mines): Same as Max but anomaly mines are not taken into results. Useful if you want to know exact protection against fields and plan to evade mines rather than knowing how much damage you take from them.</text>
 		<!-- <text>Enabling this option will make bars represent protection against actual game threats (npcs, mutants, anomalies), based on their damage values, elemental types, and also includes corrected behaviour of outfit and helmet protection. You can choose these options \n None: disabling the option \n Max: maximum of the bar represents maximum damage possible to receive \n Middle: maximum of the bar represents arithmetic average of possible damages \n Median: maximum of the bar represents median value of possible damages, that will result in more accurate representation of common damage receiving</text> -->
 	</string>
 	<string id="ui_mcm_lst_better_stats_bars_use_game_values_none">
@@ -85,6 +85,9 @@
 	</string>
 	<string id="ui_mcm_lst_better_stats_bars_use_game_values_max">
 		<text>Max</text>
+	</string>
+	<string id="ui_mcm_lst_better_stats_bars_use_game_values_max_no_mines">
+		<text>Max (No Mines)</text>
 	</string>
 
 	<string id="ui_mcm_better_stats_bars_position">
@@ -101,7 +104,7 @@
 	</string>
 
 	<string id="ui_mcm_better_stats_bars_efp_ui_compatibility">
-		<text>EFP UI compatibilty</text>
+		<text>EFP UI (Modern UI) compatibilty</text>
 	</string>
 	<string id="ui_mcm_better_stats_bars_efp_ui_compatibility_desc">
 		<text>Better display of bars when using Escape From Pripyat (EFP) modpack. Also setting position to "Fill all height" and lowering opacity of all kinds of bars is recommended</text>

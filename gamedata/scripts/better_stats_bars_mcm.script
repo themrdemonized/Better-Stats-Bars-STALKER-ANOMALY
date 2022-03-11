@@ -28,6 +28,7 @@ op = {
         {id = "use_game_values", type="list", val=0, def="max", content={
           {"none", "better_stats_bars_use_game_values_none"},
           {"max", "better_stats_bars_use_game_values_max"},
+          {"max_no_mines", "better_stats_bars_use_game_values_max_no_mines"},
           -- {"middle", "better_stats_bars_use_game_values_middle"},
           -- {"median", "better_stats_bars_use_game_values_median"},
         }},
