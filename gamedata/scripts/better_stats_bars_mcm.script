@@ -33,6 +33,7 @@ op = {
           -- {"median", "better_stats_bars_use_game_values_median"},
         }},
         {id = "arx_compatibility", type = "check", val = 1, def = false},
+        {id = "abf_compatibility", type = "check", val = 1, def = false},
         {id = "divider", type = "line"},
 
         {id = "efp_ui_compatibility", type = "check", val = 1, def = false},

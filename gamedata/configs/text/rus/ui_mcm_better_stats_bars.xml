@@ -123,5 +123,12 @@
 	<string id="ui_mcm_better_stats_bars_arx_compatibility_desc">
 		<text>Более корректное отображение статистики при использовании мода ARX (Artefact Restoration eXperiment)</text>
 	</string>
+
+	<string id="ui_mcm_better_stats_bars_abf_compatibility">
+		<text>Совместимость с ABF</text>
+	</string>
+	<string id="ui_mcm_better_stats_bars_abf_compatibility_desc">
+		<text>Более корректное отображение статистики при использовании мода ABF (Anomalous Balance Fix)</text>
+	</string>
 		
 </string_table>

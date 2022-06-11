@@ -123,5 +123,12 @@
 	<string id="ui_mcm_better_stats_bars_arx_compatibility_desc">
 		<text>More correct display of stats when using ARX mod (Artefact Restoration eXperiment)</text>
 	</string>
+
+	<string id="ui_mcm_better_stats_bars_abf_compatibility">
+		<text>ABF compatibilty</text>
+	</string>
+	<string id="ui_mcm_better_stats_bars_abf_compatibility_desc">
+		<text>More correct display of stats when using ABF mod (Anomalous Balance Fix)</text>
+	</string>
 		
 </string_table>
