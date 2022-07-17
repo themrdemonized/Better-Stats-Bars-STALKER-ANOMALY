@@ -449,6 +449,10 @@ local function read_colors(color)
 	)
 end
 
+local function smallest()
+	return 0.00000001
+end
+
 function ui_inventory.UIInventory:set_max_values(reset)
 	for bar, v in pairs(self.bar_list) do
 		if reset then
@@ -634,7 +638,7 @@ function ui_inventory.UIInventory:UpdateStats(full_stats)
 		end
 		local sec = outfit:section()
 		local id = outfit:id()
-		local cond = outfit:condition()
+		local cond = math.max(smallest(), outfit:condition())
 		
 		self.stat_outfit["health_restore"]  = c_outfit.m_fHealthRestoreSpeed
 		self.stat_outfit["radia_restore"]  = c_outfit.m_fRadiationRestoreSpeed
@@ -679,7 +683,7 @@ function ui_inventory.UIInventory:UpdateStats(full_stats)
 		end
 		local sec = helm:section()
 		local id = helm:id()
-		local cond = helm:condition()
+		local cond = math.max(smallest(), helm:condition())
 		
 		-- By jerkonov info
 		-- Elemental resists are 10 times weaker for outfits and helmets
@@ -714,7 +718,7 @@ function ui_inventory.UIInventory:UpdateStats(full_stats)
 	
 	actor:iterate_belt( function(owner, obj)
 		local sec = obj:section()
-		local cond = obj:condition()
+		local cond = math.max(smallest(), obj:condition())
 		local immunities_sec = SYS_GetParam(0,obj:section(),"hit_absorbation_sect")
 		self.stat_arty["health_restore"] = self.stat_arty["health_restore"] + ( (full_stats and 1 or cond) * SYS_GetParam(2, sec, "health_restore_speed", 0) )
 		self.stat_arty["radia_restore"]  = self.stat_arty["radia_restore"]  + ( (full_stats and 1 or cond) * SYS_GetParam(2, sec, "radiation_restore_speed", 0) )
@@ -988,7 +992,7 @@ end
 function ui_inventory.UIInventory:CalculateArtefactBoost(obj, full_stats)
 	local full_stats = show_full_stats or full_stats
 	local sec = obj:section()
-	local cond = obj:condition()
+	local cond = math.max(smallest(), obj:condition())
 	local immunities_sec = SYS_GetParam(0, sec, "hit_absorbation_sect", sec)
 	
 	-- Progress bars
@@ -1083,7 +1087,7 @@ function ui_inventory.UIInventory:CalculateOutfitBoost(obj, outfit, full_stats)
 
 	local sf = string.find
 	local sec = obj:section()
-	local cond = obj:condition()
+	local cond = math.max(smallest(), obj:condition())
 	local c_obj = outfit == "stat_helm" and obj:cast_Helmet() or obj:cast_CustomOutfit()
 
 	-- By jerkonov info
@@ -1398,11 +1402,11 @@ if not utils_ui.grok_keybind then
 				-- Then in get_stats_value function
 				-- Roll back this shit
 				if group and group == "outfit" then
-					value = value / obj:condition()
+					value = value / math.max(smallest(), obj:condition())
 				end
 
 				if show_full_stats then
-					return value / obj:condition()
+					return value / math.max(smallest(), obj:condition())
 				else
 					return value
 				end
