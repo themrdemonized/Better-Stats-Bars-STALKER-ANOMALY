@@ -34,6 +34,7 @@ op = {
         }},
         {id = "arx_compatibility", type = "check", val = 1, def = false},
         {id = "abf_compatibility", type = "check", val = 1, def = false},
+        {id = "acid_bar_fix", type = "check", val = 1, def = true},
         {id = "divider", type = "line"},
 
         {id = "efp_ui_compatibility", type = "check", val = 1, def = false},

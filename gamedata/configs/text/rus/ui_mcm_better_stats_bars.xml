@@ -130,5 +130,12 @@
 	<string id="ui_mcm_better_stats_bars_abf_compatibility_desc">
 		<text>Ѕолее корректное отображение статистики при использовании мода ABF (Anomalous Balance Fix)</text>
 	</string>
+
+	<string id="ui_mcm_better_stats_bars_acid_bar_fix">
+		<text>јльтернативное отображение защиты от химикатов</text>
+	</string>
+	<string id="ui_mcm_better_stats_bars_acid_bar_fix_desc">
+		<text>¬ режиме "»спользовать игровые значени€ ћакс" делает кислотную панель более удобной дл€ использовани€ с большим охватом, но уменьшает точность отображени€.</text>
+	</string>
 		
 </string_table>

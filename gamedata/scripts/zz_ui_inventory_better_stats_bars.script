@@ -257,6 +257,7 @@ ignore_sections = { -- Sections to ignore
 	["fireball_zone"] = true,
 	["fireball_electric_zone"] = true,
 	["fireball_acidic_zone"] = true,
+	["pri_a25_enter_door_explosive_grenade"] = true,
 }
 
 -- Stat to damage for UI
@@ -406,6 +407,8 @@ function build_tables()
 
 						if settings.abf_compatibility and settings.use_game_values ~= "max_no_mines" and (k == "fire" or k == "acid") then
 							scale = 0.1
+						elseif settings.acid_bar_fix and settings.use_game_values ~= "max_no_mines" and k == "acid" then
+							scale = 0.1
 						elseif SYS_GetParam(0, sec, "class", "") == "ZS_RADIO" then
 							scale = 0.1
 						elseif settings.use_game_values == "max_no_mines" and k ~= "shock" then
@@ -532,7 +535,7 @@ ui_inventory.UIInventory.__init = function(self)
 		boost_chemburn_protection = "acid",
 		boost_chemburn_immunity = "acid",
 		boost_shock_immunity = "shock",
-		boost_burn_immunity = "burn",
+		boost_burn_immunity = "fire",
 		boost_telepat_protection = "psi",
 		boost_telepat_immunity = "psi",
 		boost_wound_immunity = "wound",
@@ -564,12 +567,24 @@ function ui_inventory.UIInventory:GetActorImmunity(bar)
 	return SYS_GetParam(2, "actor_immunities_" .. get_console():get_string("g_game_difficulty"), self.bar_list[bar], 1)
 end
 
-function ui_inventory.UIInventory:GetImmunity(bar, stats)
+function ui_inventory.UIInventory:GetImmunity(bar, stats, print_debug)
 	local stats = stats or {}
 	local x = stats.protection or 0
 	local y = stats.booster_immunity
 	local outfit = stats.outfit
 	local helm = stats.helm
+
+	if print_debug then
+		print_tip("prot: o %s, h %s, a %s, b %s, i %s, d %s, p %s",
+			outfit or self.stat_outfit[bar],
+			helm or self.stat_helm[bar],
+			self.stat_arty[bar],
+			self.stat_boost[bar] + x,
+			((self:GetActorImmunity(bar) - (y or self.booster_immunities[bar])) / self:GetActorImmunity(bar)),
+			self.stat_list[bar].max,
+			((outfit or self.stat_outfit[bar]) + (helm or self.stat_helm[bar]) + self.stat_arty[bar] + self.stat_boost[bar] + x) / (self.stat_list[bar].max * ((self:GetActorImmunity(bar) - (y or self.booster_immunities[bar])) / self:GetActorImmunity(bar)))
+		)
+	end
 
 	if bar == "psi" then
 		if settings.use_game_values == "none" or psy_bar_patch then
@@ -1618,7 +1633,7 @@ function actor_on_before_hit(s_hit,bone_id,flags)
 		ui_inventory.GUI = ui_inventory.UIInventory()
 	end
 
-	printf("hit, sec %s, power %s, type %s, protection %s", s_hit.draftsman and s_hit.draftsman:section(), s_hit.power, s_hit.type, ui_inventory.GUI:GetProtection(stat_to_dmg[s_hit.type]))
+	print_tip("hit, sec %s, power %s, type %s, protection %s", s_hit.draftsman and s_hit.draftsman:section(), s_hit.power, s_hit.type, ui_inventory.GUI:GetImmunity(stat_to_dmg[s_hit.type], nil, true))
 end
 
 function on_game_start()

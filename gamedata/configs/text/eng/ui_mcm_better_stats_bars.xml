@@ -130,5 +130,12 @@
 	<string id="ui_mcm_better_stats_bars_abf_compatibility_desc">
 		<text>More correct display of stats when using ABF mod (Anomalous Balance Fix)</text>
 	</string>
+
+	<string id="ui_mcm_better_stats_bars_acid_bar_fix">
+		<text>Alternative Acid Bar Display</text>
+	</string>
+	<string id="ui_mcm_better_stats_bars_acid_bar_fix_desc">
+		<text>In "Use Game Values Max" mode makes acid bar more usable with more coverage by artifically reducing mines hit power at the cost of precision of display</text>
+	</string>
 		
 </string_table>
