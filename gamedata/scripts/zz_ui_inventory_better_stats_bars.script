@@ -1302,7 +1302,10 @@ function display_artefact_bonuses_after_move()
 	-- Postpone on next tick
 	-- printf("display_artefact_bonuses_after_move triggered")
 	CreateTimeEvent("display_artefact_bonuses_after_move", "display_artefact_bonuses_after_move", 0.01, function()
-		if ui_inventory.GUI then
+		if ui_inventory.GUI and ui_inventory.GUI:IsShown() then
+			if ui_inventory.GUI.mode == "loot" and not ui_inventory.GUI:GetPartner() then
+				return true
+			end
 			ui_inventory.GUI:UpdateInfo(true)
 
 			local obj = (function()
