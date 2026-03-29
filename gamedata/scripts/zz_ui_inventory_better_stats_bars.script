@@ -19,7 +19,7 @@ local fsimilar = function(a, b, eps)
 end
 local fis_zero = function(val, eps)
 	eps = eps or EPS
-	return math_abs(val) < eps
+	return math.abs(val) < eps
 end
 
 alife_time_factor = 6
@@ -1303,7 +1303,9 @@ function ui_inventory.UIInventory:ShowBonusStats(obj, full_stats)
 	if not (obj and obj:section()) then return end
 
 	-- Dont show if the bag is not actor_bag
-	if self.hover.bag ~= "actor_bag" then return end
+	if self.hover.bag ~= "actor_bag" and self.hover.bag ~= "actor_trade_bag" and self.hover.bag ~= "npc_bag" and self.hover.bag ~= "npc_trade_bag" then
+		return
+	end 
 
 	if IsArtefact(obj) then
 		self:CalculateArtefactBoost(obj, show_full_stats or full_stats)
