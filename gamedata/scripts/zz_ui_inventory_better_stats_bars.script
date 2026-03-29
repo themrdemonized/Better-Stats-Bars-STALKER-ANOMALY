@@ -12,6 +12,12 @@ local try = try or function(func, ...)
 	end
 end
 
+local EPS = 0.0000001
+local fsimilar = function(a, b, eps)
+	eps = eps or EPS
+	return math.abs(a - b) < eps
+end
+
 alife_time_factor = 6
 boosters_table = {}
 function IsBooster(obj, sec)
