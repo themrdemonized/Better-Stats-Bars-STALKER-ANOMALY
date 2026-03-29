@@ -17,6 +17,10 @@ local fsimilar = function(a, b, eps)
 	eps = eps or EPS
 	return math.abs(a - b) < eps
 end
+local fis_zero = function(val, eps)
+	eps = eps or EPS
+	return math_abs(val) < eps
+end
 
 alife_time_factor = 6
 boosters_table = {}
